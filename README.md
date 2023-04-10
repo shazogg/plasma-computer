@@ -99,3 +99,16 @@ To request the read of the internal memory use :
 output(nil, 5)
 ```
 
+### Outputs
+
+Display :
+To display text on the screen
+
+data examples :
+- "Hello world !"
+- "Hello world !"
+- ""
+
+```lua
+output(data, 1)
+```
