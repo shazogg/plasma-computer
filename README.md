@@ -52,11 +52,32 @@ The OS is the operating system of the Plasma computer. It can use the Core to do
 Keyboard :
 Use "V1" to get the key pressed.
 Split the string with the __!§!__ separator to get the key pressed.
-[1] = Key pressed or type, [2] = Key char or nil
+[1] = Key pressed or type, [2] = Key char or nil.
 
 ```lua
 function keyboardEvent()
     -- Called when a key is pressed
-  end
+end
 ```
   
+Network :
+Use "V2" to get data from network.
+
+```lua
+function networkEvent()
+    -- Called when data arrives from the network
+end
+```
+
+Disk :
+Use "V3" To get data from the disk.
+
+```lua
+function readDiskEvent()
+    -- Called when data from the disk is readed
+end
+```
+To request the read of the disk use :
+```lua
+output(nil, 3)
+```
