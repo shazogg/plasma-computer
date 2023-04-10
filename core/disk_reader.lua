@@ -1,5 +1,5 @@
 -- Global variables
-SEPARATOR = "!disk!"
+SEPARATOR = "!disk§!"
 
 -- Split a string into a table of substrings
 function split(str, sep)

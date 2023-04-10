@@ -1,4 +1,4 @@
---OS!type§!
+--OS!disk§!
 -- Global variables
 SEPARATOR = "!§!"
 
