@@ -70,14 +70,32 @@ end
 ```
 
 Disk :
-Use "V3" To get data from the disk.
+Use "V3" to get data from the disk.
 
 ```lua
 function readDiskEvent()
     -- Called when data from the disk is readed
 end
 ```
+
 To request the read of the disk use :
+
 ```lua
 output(nil, 3)
 ```
+
+Memory :
+Use "V4" to get data from the internal memory.
+
+```lua
+function readMemoryEvent()
+    -- Called when data from the internal memory is readed
+end
+```
+
+To request the read of the internal memory use :
+
+```lua
+output(nil, 5)
+```
+
