@@ -7,7 +7,7 @@ TEXT_Y_OFFSET = 10
 FONT_SIZE = 30
 MAX_LINES = 11
 DATA_SEPARATOR = "!display§!"
-TEXT_SEPARATOR = "!§!"
+LINE_SEPARATOR = "!§!"
 
 -- Split a string into a table of substrings
 function split(str, sep)
@@ -75,7 +75,7 @@ if input_text ~= nil then
   splited_text = {}
 
   if #splited_data > 1 then
-    splited_text = split(splited_data[2], TEXT_SEPARATOR)
+    splited_text = split(splited_data[2], LINE_SEPARATOR)
 
     splited_color = split(splited_data[1], ",")
 
@@ -85,7 +85,7 @@ if input_text ~= nil then
       error("Color badly formated", 1)
     end
   else
-    splited_text = split(splited_data[1], TEXT_SEPARATOR)
+    splited_text = split(splited_data[1], LINE_SEPARATOR)
   end
 
   if #splited_text > 0 then
