@@ -5,6 +5,7 @@ TEXT_COLOR = {255, 255, 255}
 COMMAND_SYMBOL_COLOR = {80, 200, 120}
 START_INFOS_COLOR = {0, 71, 171}
 MAX_LINE_DISPLAY_LENGTH = 30
+MAX_LINE_NUMBER = 11
 SEPARATOR = "!§!"
 
 -- Split a string into a table of substrings
@@ -59,6 +60,19 @@ function isASCII(char)
   return value >= 0 and value <= 127
 end
 
+-- Shift an array backwards
+function ShiftBackwardsArray(array)
+  local size = #array
+  local value = array[1]
+  for i = 1, size - 1 do
+    array[i] = array[i + 1]
+  end
+
+  array[size] = nil
+
+  return array, value
+end
+
 -- Keyboard event
 function keyboardEvent()
   if V1 ~= nil then
@@ -80,7 +94,7 @@ function keyboardEvent()
       elseif splited_data[1] == "ARIGHT" then
         moveCursorRight()
       elseif splited_data[1] == "ENTER" then
-        print(current_editor_text)
+        submitCommand()
       end
     end
   end
@@ -154,10 +168,33 @@ function textEditor()
   return displayed_text
 end
 
+-- Display lines
+function displayLines()
+  local lines_text = ""
+
+  if #lines > MAX_LINE_NUMBER - 1 then
+    ShiftBackwardsArray(lines)
+  end
+
+  for i = 1, #lines do
+    lines_text = lines_text .. SEPARATOR .. lines[i]
+  end
+
+  return lines_text .. SEPARATOR .. textEditor()
+end
+
+-- Submit command
+function submitCommand()
+  print(current_editor_text)
+end
+
 -- Setup
 function setup()
   -- Utility variable
   start_check = true
+
+  -- Lines variables
+  lines = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"}
 
   -- Blink cursor variables
   blink = false
@@ -184,6 +221,6 @@ function loop()
       blink_timer = blink_timer + 1
     end
 
-    output(start_infos_text .. "!§!" .. textEditor(), 1)
+    output(displayLines(), 1)
   end
 end
