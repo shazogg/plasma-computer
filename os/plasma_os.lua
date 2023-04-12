@@ -1,11 +1,17 @@
 --OS!disk§!
 -- Global variables
+VERSION = "1.0.0"
+
 BACKGROUND_COLOR = {0, 0, 0}
 TEXT_COLOR = {255, 255, 255}
 COMMAND_SYMBOL_COLOR = {80, 200, 120}
 START_INFOS_COLOR = {0, 71, 171}
+
 MAX_LINE_DISPLAY_LENGTH = 30
 MAX_LINE_NUMBER = 11
+
+HELP_PAGE_NUMBER = 2
+
 SEPARATOR = "!§!"
 
 -- Split a string into a table of substrings
@@ -185,7 +191,72 @@ end
 
 -- Submit command
 function submitCommand()
-  print(current_editor_text)
+  executeCommand(current_editor_text)
+  deleteEditorText()
+end
+
+-- Execute command
+function executeCommand(command_text)
+  -- Split to args
+  local args = split(command_text, " ")
+
+  if #args > 0 then
+    if args[1] == "clear" then
+      clearCommand()
+    elseif args[1] == "help" then
+      helpCommand(args)
+    elseif args[1] == "version"  then
+      versionCommand()
+    elseif args[1] == "send"  then
+      sendCommand(args)
+    end
+    -- Add your commands here
+  end
+end
+
+-- Commands
+
+-- Clear command
+function clearCommand()
+  lines = {}
+end
+
+-- Help command
+function helpCommand(args)
+  if #args > 1 then
+    page = tonumber(args[2])
+
+    if page == 1 then
+      table.insert(lines, tostring(page).. "/" .. tostring(HELP_PAGE_NUMBER))
+      table.insert(lines, "- clear : clear the screen")
+      table.insert(lines, "- version : display the version of Plasma OS")
+    elseif page == 2 then
+      table.insert(lines, tostring(page).. "/" .. tostring(HELP_PAGE_NUMBER))
+      table.insert(lines, "- send [text] : Send text over the network")
+    else
+      table.insert(lines, "0/" .. tostring(HELP_PAGE_NUMBER))
+      table.insert(lines, "- help [page_number]: for help")
+    end
+  else
+    table.insert(lines, "0/" .. tostring(HELP_PAGE_NUMBER))
+    table.insert(lines, "- help page_number: for help")
+  end
+end
+
+-- Version command
+function versionCommand()
+  table.insert(lines, "Plasma OS v" .. VERSION)
+end
+
+-- Send command
+function sendCommand(args)
+  -- Concatenate args
+  local args_text = ""
+  for i = 2, #args do
+    args_text = args_text .. args[i] .. " "
+  end
+
+  output(args_text, 2)
 end
 
 -- Setup
@@ -194,14 +265,14 @@ function setup()
   start_check = true
 
   -- Lines variables
-  lines = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"}
+  lines = {}
 
   -- Blink cursor variables
   blink = false
   blink_timer = 0
 
-  -- Start infos variables
-  start_infos_text = colorizeText("Plasma OS v0.2.0", rgbToHex(START_INFOS_COLOR))
+  -- Start infos display
+  table.insert(lines, colorizeText("Plasma OS v" .. VERSION, rgbToHex(START_INFOS_COLOR)))
 
   -- Text editor variables
   command_symbol =  colorizeText("$", rgbToHex(COMMAND_SYMBOL_COLOR)) .. " "
