@@ -2,6 +2,8 @@
 -- Global variables
 BACKGROUND_COLOR = {0, 0, 0}
 TEXT_COLOR = {255, 255, 255}
+COMMAND_SYMBOL_COLOR = {80, 200, 120}
+START_INFOS_COLOR = {0, 71, 171}
 MAX_LINE_DISPLAY_LENGTH = 30
 SEPARATOR = "!§!"
 
@@ -51,6 +53,12 @@ function separateStringEnd(str, position)
   return string.sub(str, position)
 end
 
+-- Check if a character is ASCII
+function isASCII(char)
+  local value = string.byte(char)
+  return value >= 0 and value <= 127
+end
+
 -- Keyboard event
 function keyboardEvent()
   if V1 ~= nil then
@@ -58,13 +66,12 @@ function keyboardEvent()
 
     -- Character pressed
     if #splited_data == 2 then
-      if splited_data[1] == "CHAR" then
+      if splited_data[1] == "CHAR" and isASCII(splited_data[2]) then
         addEditorCharacter(splited_data[2])
       end
     -- Key pressed
     elseif #splited_data == 1 then
       if splited_data[1] == "BACKSPACE" then
-        print("BACKSPACE")
         removeEditorCharacter()
       elseif splited_data[1] == "DELETE" then
         deleteEditorText()
@@ -72,6 +79,8 @@ function keyboardEvent()
         moveCursorLeft()
       elseif splited_data[1] == "ARIGHT" then
         moveCursorRight()
+      elseif splited_data[1] == "ENTER" then
+        print(current_editor_text)
       end
     end
   end
@@ -133,18 +142,14 @@ function moveCursorRight()
 end
 
 function textEditor()
-  displayed_text = current_editor_text
-
-  print(current_cursor_position)
+  displayed_text =  command_symbol .. current_editor_text
 
   if current_cursor_position > MAX_LINE_DISPLAY_LENGTH then
-    displayed_text = separateStringEnd(displayed_text, current_cursor_position - MAX_LINE_DISPLAY_LENGTH)
-    displayed_text = separateString(displayed_text, MAX_LINE_DISPLAY_LENGTH + 1, colorizeText("|", rgbToHex(blink and TEXT_COLOR or BACKGROUND_COLOR)))
+    displayed_text = separateStringEnd(displayed_text, (string.len(command_symbol) + current_cursor_position) - MAX_LINE_DISPLAY_LENGTH)
+    displayed_text = separateString(displayed_text, MAX_LINE_DISPLAY_LENGTH + 1 + string.len(command_symbol), colorizeText("|", rgbToHex(blink and TEXT_COLOR or BACKGROUND_COLOR)))
   else
-    displayed_text = separateString(displayed_text, current_cursor_position, colorizeText("|", rgbToHex(blink and TEXT_COLOR or BACKGROUND_COLOR)))
+    displayed_text = separateString(displayed_text, current_cursor_position + string.len(command_symbol), colorizeText("|", rgbToHex(blink and TEXT_COLOR or BACKGROUND_COLOR)))
   end
-
-  --print(string.len(displayed_text) .. "/" .. string.len(current_editor_text))
 
   return displayed_text
 end
@@ -155,10 +160,14 @@ function setup()
   start_check = true
 
   -- Blink cursor variables
-  count = 0
   blink = false
+  blink_timer = 0
+
+  -- Start infos variables
+  start_infos_text = colorizeText("Plasma OS v0.2.0", rgbToHex(START_INFOS_COLOR))
 
   -- Text editor variables
+  command_symbol =  colorizeText("$", rgbToHex(COMMAND_SYMBOL_COLOR)) .. " "
   current_editor_text = ""
   current_cursor_position = 1
   current_text_offset = 1
@@ -168,13 +177,13 @@ end
 function loop()
   -- Check if the start_check variable is not nil or false
   if start_check then
-    count = count + 1
-
-    if count >= 15 then
-      count = 0
+    if blink_timer >= 15 then
+      blink_timer = 0
       blink = not blink
+    else
+      blink_timer = blink_timer + 1
     end
 
-    output(textEditor(), 1)
+    output(start_infos_text .. "!§!" .. textEditor(), 1)
   end
 end
