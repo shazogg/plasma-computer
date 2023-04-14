@@ -16,8 +16,8 @@ SEPARATOR = "!§!"
 EVENT_SEPARATOR = "!event§!"
 
 -- Split a string into a table of substrings
-function split(str, sep)
-  local tmp = str:gsub(sep, "\0")
+function split(str, separator, occurrences)
+  local tmp = str:gsub(separator, "\0", occurrences)
   local segments = {}
   for segment in tmp:gmatch("[^%z]+") do
       table.insert(segments, segment)
@@ -80,12 +80,23 @@ function ShiftBackwardsArray(array)
   return array, value
 end
 
+-- Merge an array into a string
+function mergeArrayToString(array)
+  local result = ""
+  for _, value in ipairs(array) do
+    if value ~= nil then
+      result = result .. value
+    end
+  end
+  return result
+end
+
 -- Input event
 function inputEvent()
   if V1 ~= nil and type(V1) == "string" then
-    data = split(V1, EVENT_SEPARATOR)
+    data = split(V1, EVENT_SEPARATOR, 1)
 
-    if #data == 2 then
+    if #data > 0 then
       if data[1] == "KEYBOARD" then
         keyboardEvent(data[2])
       elseif data[1] == "NETWORK" then
@@ -95,7 +106,8 @@ function inputEvent()
       elseif data[1] == "READ_MEMORY" then
         readMemoryEvent(data[2])
       elseif data[1] == "READ_OS" then
-        readOsEvent(data[2])
+        array, value = ShiftBackwardsArray(data)
+        readOsEvent(array)
       end
     else
       error("Invalid event data")
@@ -110,7 +122,11 @@ function emitEvent(event_name, payload)
   elseif event_name == "NETWORK_OUTPUT" then
     output(payload, 2)
   else
-    output(payload, 3)
+    if payload == nil then
+      output(event_name, 3)
+    else
+      output(event_name .. EVENT_SEPARATOR .. payload, 3)
+    end
   end
 end
 
@@ -157,7 +173,7 @@ end
 
 -- Read os event
 function readOsEvent(data)
-  print(data)
+  print(mergeArrayToString(data))
 end
 
 -- Add editor character
@@ -243,7 +259,7 @@ function executeCommand(command_text)
     elseif args[1] == "send"  then
       sendCommand(args)
     elseif args[1] == "update" then
-      emitEvent("read_os", nil)
+      emitEvent("READ_OS", nil)
     end
     -- Add your commands here
   end

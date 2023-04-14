@@ -1,10 +1,29 @@
-event_name = V1
-payload = V2
+-- Global variables
+EVENT_SEPARATOR = "!event§!"
 
-if event_name == "display_input" then
-  output(event_name, 1)
-  output(payload, 2)
-elseif event_name == "network_write" then
-    output(event_name, 3)
-    output(payload, 4)
+-- Split a string into a table of substrings
+function split(str, sep)
+  local tmp = str:gsub(sep, "\0")
+  local segments = {}
+  for segment in tmp:gmatch("[^%z]+") do
+      table.insert(segments, segment)
+  end
+  return segments
 end
+
+-- Variable
+data = split(V1, EVENT_SEPARATOR)
+routes = {}
+
+-- Add routes
+routes["READ_DISK"] = 1
+routes["WRITE_DISK"] = 2
+routes["READ_MEMORY"] = 3
+routes["WRITE_MEMORY"] = 4
+routes["READ_OS"] = 5
+routes["UPDATE_OS"] = 6
+routes["SET_KEYBOARD_INDICATOR_COLOR"] = 7
+routes["SET_KEYBOARD_COLOR"] = 8
+
+-- Output
+output(data[2], routes[data[1]])
