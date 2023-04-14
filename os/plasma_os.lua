@@ -322,42 +322,50 @@ end
 -- Help command
 function helpCommand(args)
   -- Get the number of help pages
-  pages_size = #HELP_PAGES
+  pages_number = #HELP_PAGES
 
-  if #args ~= 0 then
-  else
-    displayHelpPage(HELP_PAGES[1], 0, pages_size)
-  end
+  current_global_page = tonumber(args[1])
 
+  -- Global help pages
+  if current_global_page ~= nil then
+    -- Page found
+    if current_global_page >= 0 and current_global_page < pages_number then
+      displayHelpPage(HELP_PAGES[current_global_page+1], current_global_page, pages_number)
+    -- Page not found
+    else
+      table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
+    end
+  -- Software help pages
+  elseif SOFTWARES_HELP_PAGES[args[1]] ~= nil then
+    current_software_help_pages = SOFTWARES_HELP_PAGES[args[1]]
 
-
-
-
-
-
-
-
-
-  if #args > 0 then
-    pages_size = #HELP_PAGES
-
-    if args[2] ~= nil then
-      current_page = tonumber(args[2])
-      if HELP_PAGES[current_page] ~= nil then
-        displayHelpPage(HELP_PAGES[current_page+1], current_page, pages_size)
-      elseif SOFTWARES_HELP_PAGES[args[2]] ~= nil then
-        current_software_page = tonumber(args[3])
-        if current_software_page ~= nil and SOFTWARES_HELP_PAGES[args[2]][current_software_page+1] ~= nil then
-          displayHelpPage(SOFTWARES_HELP_PAGES[args[2]][current_software_page+1], current_software_page, #SOFTWARES_HELP_PAGES[args[2]])
+    -- Software pages found
+    if current_software_help_pages ~= nil then
+      current_software_pages_number = #current_software_help_pages
+      current_software_page = tonumber(args[2])
+      if current_software_page ~= nil then
+        -- Software pages found
+        if current_software_page >= 0 and current_software_page < current_software_pages_number then
+          displayHelpPage(current_software_help_pages[current_software_page+1], current_software_page, current_software_pages_number)
         else
-          displayHelpPage(HELP_PAGES[1], 0, pages_size)
+          -- Software pages not found
+          table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
         end
+      elseif current_software_pages_number > 0 then
+        displayHelpPage(current_software_help_pages[1], 0, current_software_pages_number)
       else
-        displayHelpPage(HELP_PAGES[1], 0, pages_size)
+        -- Software pages not found
+        table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
       end
     else
-      displayHelpPage(HELP_PAGES[1], 0, pages_size)
+      -- Software pages not found
+      table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
     end
+  elseif #args > 0 then
+    -- Software pages not found
+    table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
+  else
+    displayHelpPage(HELP_PAGES[1], 0, pages_number)
   end
 end
 
