@@ -1,5 +1,6 @@
 --OS!disk§!
--- Global variables
+--#region Global variables
+
 VERSION = "1.0.0"
 
 BACKGROUND_COLOR = {0, 0, 0}
@@ -10,10 +11,40 @@ START_INFOS_COLOR = {0, 71, 171}
 MAX_LINE_DISPLAY_LENGTH = 30
 MAX_LINE_NUMBER = 11
 
-HELP_PAGE_NUMBER = 2
+SOFTWARES = {}
+KEYBOARD_INPUT_EVENTS = {}
 
 SEPARATOR = "!§!"
 EVENT_SEPARATOR = "!event§!"
+
+-- Help pages
+HELP_PAGES = {
+  {
+    "- help [page_number]: for help",
+  },
+  {
+    "- clear : clear the screen",
+    "- version : display the version of Plasma OS"
+  },
+  {
+    "- software {list;install;remove;update} :",
+    " To install software"
+  }
+}
+SOFTWARES_HELP_PAGES = {}
+
+--#endregion
+
+--#region Utils
+
+-- Get the size of a dictionary
+function getDictionarySize(dict)
+  local count = 0
+  for _ in pairs(dict) do
+    count = count + 1
+  end
+  return count
+end
 
 -- Split a string into a table of substrings
 function split(str, separator, occurrences)
@@ -91,7 +122,9 @@ function mergeArrayToString(array)
   return result
 end
 
--- Input event
+--#endregion
+
+--#region Input events
 function inputEvent()
   if V1 ~= nil and type(V1) == "string" then
     data = split(V1, EVENT_SEPARATOR, 1)
@@ -154,6 +187,11 @@ function keyboardEvent(data)
       submitCommand()
     end
   end
+
+  -- Softwares events
+  for software_name, software_function in pairs(KEYBOARD_INPUT_EVENTS) do
+    software_function(splited_data)
+  end
 end
 
 -- Network event
@@ -173,8 +211,13 @@ end
 
 -- Read os event
 function readOsEvent(data)
-  print(mergeArrayToString(data))
+  os_text = mergeArrayToString(data)
+  -- check if software need to be installed/updated/removed
+  emitEvent("UPDATE_OS", os_text .. "-- This is the end")
 end
+--#endregion
+
+--#region Editor
 
 -- Add editor character
 function addEditorCharacter(char)
@@ -238,6 +281,10 @@ function displayLines()
   return lines_text .. SEPARATOR .. textEditor()
 end
 
+--#endregion
+
+--#region Commands
+
 -- Submit command
 function submitCommand()
   executeCommand(current_editor_text)
@@ -253,19 +300,19 @@ function executeCommand(command_text)
     if args[1] == "clear" then
       clearCommand()
     elseif args[1] == "help" then
-      helpCommand(args)
+      helpCommand(ShiftBackwardsArray(args))
     elseif args[1] == "version"  then
       versionCommand()
     elseif args[1] == "send"  then
       sendCommand(args)
+    elseif args[1] == "software"  then
+      softwareCommand(args)
     elseif args[1] == "update" then
       emitEvent("READ_OS", nil)
     end
     -- Add your commands here
   end
 end
-
--- Commands
 
 -- Clear command
 function clearCommand()
@@ -274,23 +321,52 @@ end
 
 -- Help command
 function helpCommand(args)
-  if #args > 1 then
-    page = tonumber(args[2])
+  -- Get the number of help pages
+  pages_size = #HELP_PAGES
 
-    if page == 1 then
-      table.insert(lines, tostring(page).. "/" .. tostring(HELP_PAGE_NUMBER))
-      table.insert(lines, "- clear : clear the screen")
-      table.insert(lines, "- version : display the version of Plasma OS")
-    elseif page == 2 then
-      table.insert(lines, tostring(page).. "/" .. tostring(HELP_PAGE_NUMBER))
-      table.insert(lines, "- send [text] : Send text over the network")
-    else
-      table.insert(lines, "0/" .. tostring(HELP_PAGE_NUMBER))
-      table.insert(lines, "- help [page_number]: for help")
-    end
+  if #args ~= 0 then
   else
-    table.insert(lines, "0/" .. tostring(HELP_PAGE_NUMBER))
-    table.insert(lines, "- help page_number: for help")
+    displayHelpPage(HELP_PAGES[1], 0, pages_size)
+  end
+
+
+
+
+
+
+
+
+
+
+  if #args > 0 then
+    pages_size = #HELP_PAGES
+
+    if args[2] ~= nil then
+      current_page = tonumber(args[2])
+      if HELP_PAGES[current_page] ~= nil then
+        displayHelpPage(HELP_PAGES[current_page+1], current_page, pages_size)
+      elseif SOFTWARES_HELP_PAGES[args[2]] ~= nil then
+        current_software_page = tonumber(args[3])
+        if current_software_page ~= nil and SOFTWARES_HELP_PAGES[args[2]][current_software_page+1] ~= nil then
+          displayHelpPage(SOFTWARES_HELP_PAGES[args[2]][current_software_page+1], current_software_page, #SOFTWARES_HELP_PAGES[args[2]])
+        else
+          displayHelpPage(HELP_PAGES[1], 0, pages_size)
+        end
+      else
+        displayHelpPage(HELP_PAGES[1], 0, pages_size)
+      end
+    else
+      displayHelpPage(HELP_PAGES[1], 0, pages_size)
+    end
+  end
+end
+
+-- Display help page
+function displayHelpPage(help_lines, current_page, pages_number)
+  table.insert(lines, tostring(current_page) .. "/" .. tostring(pages_number-1))
+
+  for index, line in pairs(help_lines) do
+    table.insert(lines, line)
   end
 end
 
@@ -310,7 +386,45 @@ function sendCommand(args)
   emitEvent("NETWORK_OUTPUT", args_text)
 end
 
--- Setup
+-- Software command
+function softwareCommand(args)
+  if #args > 1 then
+    if args[2] == "list" then
+      table.insert(lines, "List of softwares:")
+      for name, data in pairs(SOFTWARES) do
+        table.insert(lines, name .. " v" .. data["version"])
+      end
+    end
+  end
+end
+
+--#endregion
+
+--#region Softwares
+
+-- Load softwares
+function loadSoftwares()
+  for software_name, data in pairs(SOFTWARES) do
+    if data["events"] ~= nil then
+      events = data["events"]
+
+      for index, event in pairs(events) do
+        addSoftwareEvent(software_name, event)
+      end
+    end
+  end
+end
+
+-- Add software event
+function addSoftwareEvent(software_name, event)
+  if event["event"] == "KEYBOARD_INPUT" then
+    KEYBOARD_INPUT_EVENTS[software_name] = event["function"]
+  end
+end
+
+--#endregion
+
+--#region Setup
 function setup()
   -- Utility variable
   start_check = true
@@ -331,16 +445,13 @@ function setup()
   current_cursor_position = 1
   current_text_offset = 1
 
-  -- Events
-  event_index = 0
-  events = {}
-  count = 0
+  -- Load softwares
+  loadSoftwares()
 end
+--#endregion
 
--- Loop
+--#region Loop
 function loop()
-  count = count + 1
-  event_index = event_index + 1
   -- Check if the start_check variable is not nil or false
   if start_check then
     if blink_timer >= 15 then
@@ -350,11 +461,41 @@ function loop()
       blink_timer = blink_timer + 1
     end
 
-    if event_index == 1 then
-      emitEvent("DISPLAY_OUTPUT", displayLines())
-    elseif event_index == 2 then
-      sendCommand({"", tostring(count)})
-      event_index = 0
-    end
+    emitEvent("DISPLAY_OUTPUT", displayLines())
   end
 end
+--#endregion
+
+--#region Default softwares
+
+--!soft§!
+--test!soft_data§!
+function test(data)
+  
+end
+
+SOFTWARES["test"] = {
+  ["version"] = "1.0",
+  ["author"] = "shazogg",
+  ["description"] = "test description",
+  ["events"] = {
+    {
+      ["event"] = "KEYBOARD_INPUT",
+      ["function"] = test
+    }
+  },
+  ["help"] = {
+    "1"
+  }
+}
+
+SOFTWARES_HELP_PAGES["test"] = {
+  {
+    "- test: to test this"
+  },
+  {
+    "- test2: to test this too"
+  }
+}
+
+--#endregion
