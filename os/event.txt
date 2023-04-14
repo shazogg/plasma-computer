@@ -1,0 +1,10 @@
+display_input
+network_write
+read_disk_data
+write_disk_data
+read_memory
+write_memory
+set_keyboard_indicator_color
+set_keyboard_color
+read_os
+update_os

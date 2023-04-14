@@ -13,6 +13,7 @@ MAX_LINE_NUMBER = 11
 HELP_PAGE_NUMBER = 2
 
 SEPARATOR = "!§!"
+EVENT_SEPARATOR = "!event§!"
 
 -- Split a string into a table of substrings
 function split(str, sep)
@@ -79,52 +80,84 @@ function ShiftBackwardsArray(array)
   return array, value
 end
 
--- Keyboard event
-function keyboardEvent()
-  if V1 ~= nil then
-    splited_data = split(V1, SEPARATOR)
+-- Input event
+function inputEvent()
+  if V1 ~= nil and type(V1) == "string" then
+    data = split(V1, EVENT_SEPARATOR)
 
-    -- Character pressed
-    if #splited_data == 2 then
-      if splited_data[1] == "CHAR" and isASCII(splited_data[2]) then
-        addEditorCharacter(splited_data[2])
+    if #data == 2 then
+      if data[1] == "KEYBOARD" then
+        keyboardEvent(data[2])
+      elseif data[1] == "NETWORK" then
+        networkEvent(data[2])
+      elseif data[1] == "READ_DISK" then
+        readDiskEvent(data[2])
+      elseif data[1] == "READ_MEMORY" then
+        readMemoryEvent(data[2])
+      elseif data[1] == "READ_OS" then
+        readOsEvent(data[2])
       end
-    -- Key pressed
-    elseif #splited_data == 1 then
-      if splited_data[1] == "BACKSPACE" then
-        removeEditorCharacter()
-      elseif splited_data[1] == "DELETE" then
-        deleteEditorText()
-      elseif splited_data[1] == "ALEFT" then
-        moveCursorLeft()
-      elseif splited_data[1] == "ARIGHT" then
-        moveCursorRight()
-      elseif splited_data[1] == "ENTER" then
-        submitCommand()
-      end
+    else
+      error("Invalid event data")
+    end
+  end
+end
+
+-- Emit event
+function emitEvent(event_name, payload)
+  if event_name == "DISPLAY_OUTPUT" then
+    output(payload, 1)
+  elseif event_name == "NETWORK_OUTPUT" then
+    output(payload, 2)
+  else
+    output(payload, 3)
+  end
+end
+
+
+-- Keyboard event
+function keyboardEvent(data)
+  splited_data = split(data, SEPARATOR)
+
+  -- Character pressed
+  if #splited_data == 2 then
+    if splited_data[1] == "CHAR" and isASCII(splited_data[2]) then
+      addEditorCharacter(splited_data[2])
+    end
+  -- Key pressed
+  elseif #splited_data == 1 then
+    if splited_data[1] == "BACKSPACE" then
+      removeEditorCharacter()
+    elseif splited_data[1] == "DELETE" then
+      deleteEditorText()
+    elseif splited_data[1] == "ALEFT" then
+      moveCursorLeft()
+    elseif splited_data[1] == "ARIGHT" then
+      moveCursorRight()
+    elseif splited_data[1] == "ENTER" then
+      submitCommand()
     end
   end
 end
 
 -- Network event
-function networkEvent()
-  if V2 ~= nil then
-    print(V2)
-  end
+function networkEvent(data)
+  print(data)
 end
 
 -- Read disk event
-function readDiskEvent()
-  if V3 ~= nil then
-    output(V3, 1)
-  end
+function readDiskEvent(data)
+  print(data)
 end
 
 -- Read memory event
-function readMemoryEvent()
-  if V4 ~= nil then
-    output(V4, 1)
-  end
+function readMemoryEvent(data)
+  print(data)
+end
+
+-- Read os event
+function readOsEvent(data)
+  print(data)
 end
 
 -- Add editor character
@@ -209,6 +242,8 @@ function executeCommand(command_text)
       versionCommand()
     elseif args[1] == "send"  then
       sendCommand(args)
+    elseif args[1] == "update" then
+      emitEvent("read_os", nil)
     end
     -- Add your commands here
   end
@@ -256,7 +291,7 @@ function sendCommand(args)
     args_text = args_text .. args[i] .. " "
   end
 
-  output(args_text, 2)
+  emitEvent("NETWORK_OUTPUT", args_text)
 end
 
 -- Setup
@@ -279,10 +314,17 @@ function setup()
   current_editor_text = ""
   current_cursor_position = 1
   current_text_offset = 1
+
+  -- Events
+  event_index = 0
+  events = {}
+  count = 0
 end
 
 -- Loop
 function loop()
+  count = count + 1
+  event_index = event_index + 1
   -- Check if the start_check variable is not nil or false
   if start_check then
     if blink_timer >= 15 then
@@ -292,6 +334,11 @@ function loop()
       blink_timer = blink_timer + 1
     end
 
-    output(displayLines(), 1)
+    if event_index == 1 then
+      emitEvent("DISPLAY_OUTPUT", displayLines())
+    elseif event_index == 2 then
+      sendCommand({"", tostring(count)})
+      event_index = 0
+    end
   end
 end
