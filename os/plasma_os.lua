@@ -197,23 +197,12 @@ end
 -- Network event
 function networkEvent(data)
   print(data)
+  addLine(colorizeText(data, rgbToHex({0, 0, 255})))
 end
 
 -- Read disk event
 function readDiskEvent(data)
   print(data)
-end
-
--- Read memory event
-function readMemoryEvent(data)
-  print(data)
-end
-
--- Read os event
-function readOsEvent(data)
-  os_text = mergeArrayToString(data)
-  -- check if software need to be installed/updated/removed
-  emitEvent("UPDATE_OS", os_text .. "-- This is the end")
 end
 --#endregion
 
@@ -253,6 +242,16 @@ function moveCursorRight()
   end
 end
 
+-- Blink cursor Loop
+function blinkLoop()
+  if blink_timer >= 15 then
+    blink_timer = 0
+    blink = not blink
+  else
+    blink_timer = blink_timer + 1
+  end
+end
+
 function textEditor()
   displayed_text =  command_symbol .. current_editor_text
 
@@ -279,6 +278,11 @@ function displayLines()
   end
 
   return lines_text .. SEPARATOR .. textEditor()
+end
+
+-- Add line
+function addLine(line)
+  table.insert(lines, line)
 end
 
 --#endregion
@@ -309,6 +313,8 @@ function executeCommand(command_text)
       softwareCommand(args)
     elseif args[1] == "update" then
       emitEvent("READ_OS", nil)
+    elseif args[1] == "override" then
+      overrideScreenSwitch()
     end
     -- Add your commands here
   end
@@ -319,7 +325,7 @@ function clearCommand()
   lines = {}
 end
 
--- Help command
+--#region Help command
 function helpCommand(args)
   -- Get the number of help pages
   pages_number = #HELP_PAGES
@@ -333,7 +339,7 @@ function helpCommand(args)
       displayHelpPage(HELP_PAGES[current_global_page+1], current_global_page, pages_number)
     -- Page not found
     else
-      table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
+      addLine(colorizeText("Help page not found", rgbToHex({255, 0, 0})))
     end
   -- Software help pages
   elseif SOFTWARES_HELP_PAGES[args[1]] ~= nil then
@@ -349,21 +355,21 @@ function helpCommand(args)
           displayHelpPage(current_software_help_pages[current_software_page+1], current_software_page, current_software_pages_number)
         else
           -- Software pages not found
-          table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
+          addLine(colorizeText("Help page not found", rgbToHex({255, 0, 0})))
         end
       elseif current_software_pages_number > 0 then
         displayHelpPage(current_software_help_pages[1], 0, current_software_pages_number)
       else
         -- Software pages not found
-        table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
+        addLine(colorizeText("Help page not found", rgbToHex({255, 0, 0})))
       end
     else
       -- Software pages not found
-      table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
+      addLine(colorizeText("Help page not found", rgbToHex({255, 0, 0})))
     end
   elseif #args > 0 then
     -- Software pages not found
-    table.insert(lines, colorizeText("Help page not found", rgbToHex({255, 0, 0})))
+    addLine(colorizeText("Help page not found", rgbToHex({255, 0, 0})))
   else
     displayHelpPage(HELP_PAGES[1], 0, pages_number)
   end
@@ -371,16 +377,18 @@ end
 
 -- Display help page
 function displayHelpPage(help_lines, current_page, pages_number)
-  table.insert(lines, tostring(current_page) .. "/" .. tostring(pages_number-1))
+  addLine(tostring(current_page) .. "/" .. tostring(pages_number-1))
 
   for index, line in pairs(help_lines) do
-    table.insert(lines, line)
+    addLine(line)
   end
 end
 
+--#endregion
+
 -- Version command
 function versionCommand()
-  table.insert(lines, "Plasma OS v" .. VERSION)
+  addLine("Plasma OS v" .. VERSION)
 end
 
 -- Send command
@@ -398,11 +406,23 @@ end
 function softwareCommand(args)
   if #args > 1 then
     if args[2] == "list" then
-      table.insert(lines, "List of softwares:")
+      addLine("List of softwares:")
       for name, data in pairs(SOFTWARES) do
-        table.insert(lines, name .. " v" .. data["version"])
+        addLine(name .. " v" .. data["version"])
       end
     end
+  end
+end
+
+-- Override screen
+function overrideScreenSwitch()
+  override_screen = not override_screen
+  write_var(override_screen, "dispover")
+
+  if override_screen then
+    addLine(colorizeText("Override screen activated", rgbToHex({0, 255, 0})))
+  else
+    addLine(colorizeText("Override screen deactivated", rgbToHex({0, 255, 0})))
   end
 end
 
@@ -436,6 +456,7 @@ end
 function setup()
   -- Utility variable
   start_check = true
+  override_screen = false
 
   -- Lines variables
   lines = {}
@@ -445,7 +466,7 @@ function setup()
   blink_timer = 0
 
   -- Start infos display
-  table.insert(lines, colorizeText("Plasma OS v" .. VERSION, rgbToHex(START_INFOS_COLOR)))
+  addLine(colorizeText("Plasma OS v" .. VERSION, rgbToHex(START_INFOS_COLOR)))
 
   -- Text editor variables
   command_symbol =  colorizeText("$", rgbToHex(COMMAND_SYMBOL_COLOR)) .. " "
@@ -462,14 +483,11 @@ end
 function loop()
   -- Check if the start_check variable is not nil or false
   if start_check then
-    if blink_timer >= 15 then
-      blink_timer = 0
-      blink = not blink
-    else
-      blink_timer = blink_timer + 1
-    end
+    blinkLoop()
 
-    emitEvent("DISPLAY_OUTPUT", displayLines())
+    if not override_screen then
+      emitEvent("DISPLAY_OUTPUT", displayLines())
+    end
   end
 end
 --#endregion
@@ -479,11 +497,11 @@ end
 --!soft§!
 --test!soft_data§!
 function test(data)
-  
+
 end
 
 SOFTWARES["test"] = {
-  ["version"] = "1.0",
+  ["version"] = "1.5",
   ["author"] = "shazogg",
   ["description"] = "test description",
   ["events"] = {

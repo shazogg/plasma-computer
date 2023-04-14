@@ -1,21 +1,11 @@
 --!soft§!
-
---SOFTWARE_NAME!soft_data§!
-function FUNCTION_NAME()
-  
-end
-
-
--- Test software
-
---!soft§!
 --test!soft_data§!
 function test(data)
-  print(data)
+
 end
 
-softwares["test"] = {
-  ["version"] = "1.0",
+SOFTWARES["test"] = {
+  ["version"] = "1.5",
   ["author"] = "shazogg",
   ["description"] = "test description",
   ["events"] = {
@@ -23,5 +13,17 @@ softwares["test"] = {
       ["event"] = "KEYBOARD_INPUT",
       ["function"] = test
     }
+  },
+  ["help"] = {
+    "1"
+  }
+}
+
+SOFTWARES_HELP_PAGES["test"] = {
+  {
+    "- test: to test this"
+  },
+  {
+    "- test2: to test this too"
   }
 }
