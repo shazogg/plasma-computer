@@ -194,7 +194,8 @@ output(data, 6) -- To set the color of the keyboard indicator
 ## __Plasma OS Software API__
 
 To create a software for the Plasma OS.\
-Use the "Software" folder as a base and replace all the values with your own.
+Use the "Software" folder as a base and replace all the values with your own.\
+To load the software put the data in a disk, put on the Wireless Disk Reader and execute "software install" on the terminal.
 
 put this on the top of the software code to make it work and replace the values with your own:
 
