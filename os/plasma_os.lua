@@ -125,84 +125,51 @@ end
 --#endregion
 
 --#region Input events
-function inputEvent()
-  if V1 ~= nil and type(V1) == "string" then
-    data = split(V1, EVENT_SEPARATOR, 1)
-
-    if #data > 0 then
-      if data[1] == "KEYBOARD" then
-        keyboardEvent(data[2])
-      elseif data[1] == "NETWORK" then
-        networkEvent(data[2])
-      elseif data[1] == "READ_DISK" then
-        readDiskEvent(data[2])
-      elseif data[1] == "READ_MEMORY" then
-        readMemoryEvent(data[2])
-      elseif data[1] == "READ_OS" then
-        array, value = ShiftBackwardsArray(data)
-        readOsEvent(array)
-      end
-    else
-      error("Invalid event data")
-    end
-  end
-end
-
--- Emit event
-function emitEvent(event_name, payload)
-  if event_name == "DISPLAY_OUTPUT" then
-    output(payload, 1)
-  elseif event_name == "NETWORK_OUTPUT" then
-    output(payload, 2)
-  else
-    if payload == nil then
-      output(event_name, 3)
-    else
-      output(event_name .. EVENT_SEPARATOR .. payload, 3)
-    end
-  end
-end
-
 
 -- Keyboard event
-function keyboardEvent(data)
-  splited_data = split(data, SEPARATOR)
+function keyboardEvent()
+  if type(V1) == "string" then
+    splited_data = split(data, SEPARATOR)
 
-  -- Character pressed
-  if #splited_data == 2 then
-    if splited_data[1] == "CHAR" and isASCII(splited_data[2]) then
-      addEditorCharacter(splited_data[2])
+    -- Character pressed
+    if #splited_data == 2 then
+      if splited_data[1] == "CHAR" and isASCII(splited_data[2]) then
+        addEditorCharacter(splited_data[2])
+      end
+    -- Key pressed
+    elseif #splited_data == 1 then
+      if splited_data[1] == "BACKSPACE" then
+        removeEditorCharacter()
+      elseif splited_data[1] == "DELETE" then
+        deleteEditorText()
+      elseif splited_data[1] == "ALEFT" then
+        moveCursorLeft()
+      elseif splited_data[1] == "ARIGHT" then
+        moveCursorRight()
+      elseif splited_data[1] == "ENTER" then
+        submitCommand()
+      end
     end
-  -- Key pressed
-  elseif #splited_data == 1 then
-    if splited_data[1] == "BACKSPACE" then
-      removeEditorCharacter()
-    elseif splited_data[1] == "DELETE" then
-      deleteEditorText()
-    elseif splited_data[1] == "ALEFT" then
-      moveCursorLeft()
-    elseif splited_data[1] == "ARIGHT" then
-      moveCursorRight()
-    elseif splited_data[1] == "ENTER" then
-      submitCommand()
-    end
-  end
 
-  -- Softwares events
-  for software_name, software_function in pairs(KEYBOARD_INPUT_EVENTS) do
-    software_function(splited_data)
+    -- Softwares events
+    for software_name, software_function in pairs(KEYBOARD_INPUT_EVENTS) do
+      software_function(splited_data)
+    end
   end
 end
 
 -- Network event
-function networkEvent(data)
-  print(data)
-  addLine(colorizeText(data, rgbToHex({0, 0, 255})))
+function networkEvent()
+  if type(V2) == "string" then
+    print(V2)
+  end
 end
 
 -- Read disk event
-function readDiskEvent(data)
-  print(data)
+function readDiskEvent()
+  if type(V3) == "string" then
+    print(V3)
+  end
 end
 --#endregion
 
@@ -312,7 +279,7 @@ function executeCommand(command_text)
     elseif args[1] == "software"  then
       softwareCommand(args)
     elseif args[1] == "update" then
-      emitEvent("READ_OS", nil)
+      output(nil, 5)
     elseif args[1] == "override" then
       overrideScreenSwitch()
     end
@@ -399,7 +366,7 @@ function sendCommand(args)
     args_text = args_text .. args[i] .. " "
   end
 
-  emitEvent("NETWORK_OUTPUT", args_text)
+  output(args_text, 2)
 end
 
 -- Software command
@@ -417,7 +384,6 @@ end
 -- Override screen
 function overrideScreenSwitch()
   override_screen = not override_screen
-  write_var(override_screen, "dispover")
 
   if override_screen then
     addLine(colorizeText("Override screen activated", rgbToHex({0, 255, 0})))
@@ -486,7 +452,7 @@ function loop()
     blinkLoop()
 
     if not override_screen then
-      emitEvent("DISPLAY_OUTPUT", displayLines())
+      output(displayLines(), 1)
     end
   end
 end

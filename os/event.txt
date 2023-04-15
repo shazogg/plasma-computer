@@ -1,13 +1,13 @@
-DISPLAY_OUTPUT
+INPUTS:
+keyboard_input = 1
+network_input = 2
+read_disk_input = 3
 
-NETWORK_OUTPUT
 
-READ_DISK
-WRITE_DISK
-
-WRITE_MEMORY
-
-UPDATE_OS
-
-SET_KEYBOARD_INDICATOR_COLOR
-SET_KEYBOARD_COLOR
+OUTPUTS:
+display_output = 1
+network_output = 2
+read_disk = 3
+write_disk = 4
+update_os = 5
+set_indicator_color = 6
