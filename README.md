@@ -49,12 +49,16 @@ __how to use :__
 
 1. Type "help" on the terminal to get the list of commands.
 
+---
+
 ## __Code__
 
 1. Devices code is in the "Devices" folder.
 2. Plasma OS code is in the "OS" folder.
 3. OS example is in the "OS" folder.
 4. Software example is in the "Software" folder.
+
+---
 
 ## __Computer API__
 
@@ -185,6 +189,73 @@ Data examples :
 output(data, 6) -- To set the color of the keyboard indicator
 ```
 
+---
+
 ## __Plasma OS Software API__
 
-To create a software for the Plasma OS.
+To create a software for the Plasma OS.\
+Use the "Software" folder as a base and replace all the values with your own.
+
+put this on the top of the software code to make it work and replace the values with your own:
+
+```lua
+--!soft§!
+--SOFTWARE_NAME!soft_data§!
+```
+
+### DATA
+
+Put this in your software code to add information about it and replace the values with your own:
+
+```lua
+SOFTWARES["SOFTWARE_NAME"] = {
+  ["version"] = "1.0.0",
+  ["author"] = "shazogg",
+  ["description"] = "DESCRIPTION",
+  ["events"] = {
+    {
+      ["event"] = "KEYBOARD_INPUT",
+      ["function"] = example1
+    },
+    {
+      ["event"] = "NETWORK_INPUT",
+      ["function"] = example2
+    },
+  }
+}
+```
+
+### EVENTS
+
+Events are used to make the software interact with Plasma OS.\
+You can add events to your software by adding event in the "events" table in the data above.
+
+__EVENTS LIST :__
+
+- __"KEYBOARD_INPUT"__: On Keyboard input
+- __"NETWORK_INPUT"__: On Network input
+- __"DISK_INPUT"__: On Disk input
+- __"SETUP"__: On Setup
+- __"LOOP"__: On Loop
+
+### HELP PAGES
+
+```lua
+to add pages to the help command, add this to the software code and replace the values with your own:
+
+```lua
+SOFTWARES_HELP_PAGES["SOFTWARE_NAME"] = {
+  {
+    "example software, page 1",
+    "- example2: to test this too, page 1"
+  },
+  {
+    "example software, page 2",
+    "- example2: to test this too"
+  }
+}
+```
+
+### INTERNAL FUNCTIONS
+
+You can access all the variables and functions inside Plasma OS, to use outputs read the "Computer API" section above.
