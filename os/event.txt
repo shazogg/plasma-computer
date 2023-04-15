@@ -1,4 +1,5 @@
 INPUTS:
+update_os = Source
 keyboard_input = 1
 network_input = 2
 read_disk_input = 3

@@ -1,27 +1,53 @@
 # __Plasma Computer__
 
-Computer Core and OS in Plasma Sandbox
+Computer and OS in Plasma
 
-_Note: This is a work in progress and is not finished yet. If you detect any bugs, please report them._
+- Plasma Computer is a computer that can run an OS and interact with the world.
+- Plasma OS is integrated by default but if you want to update the computer with a new version of Plasma OS or your custom OS you will have to use the devices below
+- For a custom OS you can use Plasma OS as a base and read the code to understand how it works.
 
-## How to use the computer
+_Note: If you detect any bugs, please report them._
+
+---
+
+## Devices
+
+### Computer
+
+STEAM ID: __2962708844__\
+The computer is the main device, it is used to run programs and interact with the world, there is two version: laptop and desktop.
+
+__how to use :__
 
 1. Turn On.
-2. Place the Plasma OS Disk or yours on the Disk reader.
-3. Press the button of the Disk reader.
-4. Enyoy the result.
-
-### Plasma OS
-
-Type "help" on the terminal to get the list of commands.
+2. Enyoy the result.
 
 ### Disks
 
-Disks are used to store programs and data. They are used by the Disk Reader to load programs and data. If you want to create one, place a "NFC TAG" and put data if you want.
+Disks are used to store programs and data. They are used by the Wireless Disk Reader to load OS, software and data.
 
-### Operating System
+__how to use :__
 
-If you want to create your own OS, you can use the Plasma OS as a base. You can find it in the "OS" folder and read the API below.
+1. Create a "NFC TAG" and put data if you want.
+
+### Wireless Disk Reader
+
+STEAM ID: __2962710912__\
+The Wireless Disk Reader is used to read and write data on disks.
+
+__how to use :__
+
+1. Place a Disk on it.
+2. To load an OS, press the button on it.
+
+### Plasma OS
+
+STEAM ID: __2960539673__\
+The Plasma OS is the operating system of the Plasma computer.
+
+__how to use :__
+
+1. Type "help" on the terminal to get the list of commands.
 
 ## __Code__
 

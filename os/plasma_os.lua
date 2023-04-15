@@ -1,7 +1,7 @@
 --OS!disk§!
 --#region Global variables
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 BACKGROUND_COLOR = {0, 0, 0}
 TEXT_COLOR = {255, 255, 255}
@@ -129,7 +129,7 @@ end
 -- Keyboard event
 function keyboardEvent()
   if type(V1) == "string" then
-    splited_data = split(data, SEPARATOR)
+    splited_data = split(V1, SEPARATOR)
 
     -- Character pressed
     if #splited_data == 2 then
