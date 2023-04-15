@@ -7,15 +7,25 @@ BACKGROUND_COLOR = {0, 0, 0}
 TEXT_COLOR = {255, 255, 255}
 COMMAND_SYMBOL_COLOR = {80, 200, 120}
 START_INFOS_COLOR = {0, 71, 171}
+ERROR_COLOR = {255, 0, 0}
 
 MAX_LINE_DISPLAY_LENGTH = 30
 MAX_LINE_NUMBER = 11
 
 SOFTWARES = {}
 KEYBOARD_INPUT_EVENTS = {}
+NETWORK_INPUT_EVENTS = {}
+READ_DISK_INPUT_EVENTS = {}
+SETUP_EVENTS = {}
+LOOP_EVENTS = {}
+SOFTWARES_COMMANDS = {}
+SOFTWARES_HELP_PAGES = {}
+
 
 SEPARATOR = "!§!"
 EVENT_SEPARATOR = "!event§!"
+SOFTWARES_SEPARATOR = "!soft§!"
+SOFTWARES_DATA_SEPARATOR = "!soft_data§!"
 
 -- Help pages
 HELP_PAGES = {
@@ -31,7 +41,7 @@ HELP_PAGES = {
     " To install software"
   }
 }
-SOFTWARES_HELP_PAGES = {}
+
 
 --#endregion
 
@@ -161,14 +171,25 @@ end
 -- Network event
 function networkEvent()
   if type(V2) == "string" then
-    print(V2)
+    -- Softwares events
+    for software_name, software_function in pairs(NETWORK_INPUT_EVENTS) do
+      software_function(splited_data)
+    end
   end
 end
 
 -- Read disk event
 function readDiskEvent()
   if type(V3) == "string" then
-    print(V3)
+    -- Software install mode
+    if software_install_mode then
+      installSoftware(V3)
+    end
+
+    -- Softwares events
+    for software_name, software_function in pairs(READ_DISK_INPUT_EVENTS) do
+      software_function(splited_data)
+    end
   end
 end
 --#endregion
@@ -282,6 +303,10 @@ function executeCommand(command_text)
       output(nil, 5)
     elseif args[1] == "override" then
       overrideScreenSwitch()
+    elseif SOFTWARES_COMMANDS[args[1]] ~= nil then
+      SOFTWARES_COMMANDS[args[1]]()
+    else
+      addLine(colorizeText("Command not found", rgbToHex(ERROR_COLOR)))
     end
     -- Add your commands here
   end
@@ -377,6 +402,9 @@ function softwareCommand(args)
       for name, data in pairs(SOFTWARES) do
         addLine(name .. " v" .. data["version"])
       end
+    elseif args[2] == "install" then
+      software_install_mode = true
+      output(nil, 3)
     end
   end
 end
@@ -400,11 +428,21 @@ end
 -- Load softwares
 function loadSoftwares()
   for software_name, data in pairs(SOFTWARES) do
+    -- Add software events
     if data["events"] ~= nil then
       events = data["events"]
 
       for index, event in pairs(events) do
         addSoftwareEvent(software_name, event)
+      end
+    end
+
+    -- Add software commands
+    if data["commands"] ~= nil then
+      commands = data["commands"]
+
+      for index, command in pairs(commands) do
+        SOFTWARES_COMMANDS[command["command"]] = command["function"]
       end
     end
   end
@@ -414,6 +452,62 @@ end
 function addSoftwareEvent(software_name, event)
   if event["event"] == "KEYBOARD_INPUT" then
     KEYBOARD_INPUT_EVENTS[software_name] = event["function"]
+  elseif event["event"] == "NETWORK_INPUT" then
+    NETWORK_INPUT_EVENTS[software_name] = event["function"]
+  elseif event["event"] == "DISK_INPUT" then
+    DISK_INPUT_EVENTS[software_name] = event["function"]
+  elseif event["event"] == "SETUP" then
+    SETUP_EVENTS[software_name] = event["function"]
+  elseif event["event"] == "LOOP" then
+    LOOP_EVENTS[software_name] = event["function"]
+  end
+end
+
+-- Install software
+function installSoftware(data)
+  cleaned_data = split(data, SOFTWARES_SEPARATOR, 1)
+  
+  if #cleaned_data == 2 then
+    software_data = split(cleaned_data[2], SOFTWARES_DATA_SEPARATOR, 1)
+
+    if #software_data == 2 then
+      software_name = software_data[1]:gsub("-", "")
+
+      current_os = read_var("os")
+      os_parts = split(current_os, SOFTWARES_SEPARATOR)
+
+
+
+      print(software_name)
+    else
+      addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
+    end
+  else
+    addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
+  end
+end
+
+-- String to software data
+function stringToSoftwareData(data)
+  cleaned_data = split(data, SOFTWARES_SEPARATOR, 1)
+  
+  if #cleaned_data == 2 then
+    software_data = split(cleaned_data[2], SOFTWARES_DATA_SEPARATOR, 1)
+
+    if #software_data == 2 then
+      software_name = software_data[1]:gsub("-", "")
+
+      current_os = read_var("os")
+      os_parts = split(current_os, SOFTWARES_SEPARATOR)
+
+
+
+      print(software_name)
+    else
+      addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
+    end
+  else
+    addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
   end
 end
 
@@ -441,8 +535,16 @@ function setup()
   current_cursor_position = 1
   current_text_offset = 1
 
+  -- Softwares variables
+  software_install_mode = false
+
   -- Load softwares
   loadSoftwares()
+
+  -- Softwares events
+  for software_name, software_function in pairs(SETUP_EVENTS) do
+    software_function(splited_data)
+  end
 end
 --#endregion
 
@@ -452,6 +554,11 @@ function loop()
   if start_check then
     blinkLoop()
 
+    -- Softwares events
+    for software_name, software_function in pairs(LOOP_EVENTS) do
+      software_function(splited_data)
+    end
+
     if not override_screen then
       output(displayLines(), 1)
     end
@@ -460,35 +567,5 @@ end
 --#endregion
 
 --#region Default softwares
-
---!soft§!
---test!soft_data§!
-function test(data)
-
-end
-
-SOFTWARES["test"] = {
-  ["version"] = "1.5",
-  ["author"] = "shazogg",
-  ["description"] = "test description",
-  ["events"] = {
-    {
-      ["event"] = "KEYBOARD_INPUT",
-      ["function"] = test
-    }
-  },
-  ["help"] = {
-    "1"
-  }
-}
-
-SOFTWARES_HELP_PAGES["test"] = {
-  {
-    "- test: to test this"
-  },
-  {
-    "- test2: to test this too"
-  }
-}
 
 --#endregion

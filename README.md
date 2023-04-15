@@ -29,6 +29,7 @@ Disks are used to store programs and data. They are used by the Wireless Disk Re
 __how to use :__
 
 1. Create a "NFC TAG" and put data if you want.
+2. Put __--FILE!disk§!__ on top of the file to make it a file disk.
 
 ### Wireless Disk Reader
 
@@ -66,7 +67,7 @@ __how to use :__
 
 ### __Inputs :__
 
-__Keyboard__ :
+__Keyboard__ :\
 Use "V1" to get the key pressed.
 Split the string with the __!§!__ separator to get the key pressed.\
 [1] = Key pressed or type, [2] = Key char or nil.
@@ -224,6 +225,7 @@ To load the software put the data in a disk, put on the Wireless Disk Reader and
 put this on the top of the software code to make it work and replace the values with your own:
 
 ```lua
+--FILE!disk§!
 --!soft§!
 --SOFTWARE_NAME!soft_data§!
 ```
@@ -246,6 +248,16 @@ SOFTWARES["SOFTWARE_NAME"] = {
       ["event"] = "NETWORK_INPUT",
       ["function"] = example2
     },
+  },
+  ["commands"] = {
+    {
+      ["command"] = "example1",
+      ["function"] = example1
+    },
+    {
+      ["command"] = "example2",
+      ["function"] = example2
+    },
   }
 }
 ```
@@ -253,7 +265,7 @@ SOFTWARES["SOFTWARE_NAME"] = {
 ### EVENTS
 
 Events are used to make the software interact with Plasma OS.\
-You can add events to your software by adding event in the "events" table in the data above.
+You can add events to your software by adding events in the "events" table in the data above.
 
 __EVENTS LIST :__
 
@@ -265,7 +277,6 @@ __EVENTS LIST :__
 
 ### HELP PAGES
 
-```lua
 to add pages to the help command, add this to the software code and replace the values with your own:
 
 ```lua
@@ -280,6 +291,11 @@ SOFTWARES_HELP_PAGES["SOFTWARE_NAME"] = {
   }
 }
 ```
+
+### COMMANDS
+
+Commands are used to make the user interact with the software.\
+You can add commands to your software by adding commands in the "commands" table in the data above.
 
 ### INTERNAL FUNCTIONS
 
