@@ -51,37 +51,18 @@ __how to use :__
 
 ## __Code__
 
-## Core
+1. Devices code is in the "Devices" folder.
+2. Plasma OS code is in the "OS" folder.
+3. OS example is in the "OS" folder.
+4. Software example is in the "Software" folder.
 
-The Core consists of all the lua files used by the Plasma computer.
+## __Computer API__
 
-### Disk Reader
-
-The disk reader is a program that reads the disk and loads programs into the computer and also reads and writes to disks.
-
-### Display Lines
-
-The Display Lines is a program that display lines of text on the screen and change the background color of it.
-
-### Network Emiter
-
-The Network Emiter is a program that sends and receive data from the network.
-
-### Load World
-
-The Load World is a program that emit a signal when the world is loaded.
-
-## OS
-
-The OS is the operating system of the Plasma computer. It can use the Core to do things.
-
-## __API__
-
-### Inputs
+### __Inputs :__
 
 __Keyboard__ :
 Use "V1" to get the key pressed.
-Split the string with the __!§!__ separator to get the key pressed.
+Split the string with the __!§!__ separator to get the key pressed.\
 [1] = Key pressed or type, [2] = Key char or nil.
 
 "V1" type: String
@@ -89,28 +70,31 @@ Split the string with the __!§!__ separator to get the key pressed.
 ```lua
 function keyboardEvent()
     -- Called when a key is pressed
+    print(V1)
 end
 ```
   
 __Network__ :
 Use "V2" to get data from network.
 
-"V1" type: Any
+"V2" type: Any
 
 ```lua
 function networkEvent()
     -- Called when data arrives from the network
+    print(V2) -- Error if V2 not a string
 end
 ```
 
 __Disk__ :
 Use "V3" to get data from the disk.
 
-"V1" type: Any
+"V3" type: Any
 
 ```lua
 function readDiskEvent()
     -- Called when data from the disk is readed
+    print(V3) -- Error if V3 not a string
 end
 ```
 
@@ -121,26 +105,27 @@ output(nil, 3)
 ```
 
 __Memory__ :
-Use "V4" to get data from the internal memory.
+
+To read the internal memory use :
 
 ```lua
-function readMemoryEvent()
-    -- Called when data from the internal memory is readed
-end
+read_var("memory")
 ```
 
-To request the read of the internal memory use :
+__OS__ :
+
+To read the current OS :
 
 ```lua
-output(nil, 5)
+read_var("os")
 ```
 
-### Outputs
+### __Outputs:__
 
-__Display__ :
+__Display__ :\
 To display text on the screen.
 
-Data: String
+Data type : String
 
 Data examples :
 
@@ -152,7 +137,7 @@ Data examples :
 output(data, 1)
 ```
 
-__Network__ :
+__Network__ :\
 To send data to the network.
 
 Data: Any
@@ -161,7 +146,7 @@ Data: Any
 output(data, 2)
 ```
 
-__Disk__ :
+__Disk__ :\
 To write data to the disk.
 
 Data: Any
@@ -170,17 +155,24 @@ Data: Any
 output(data, 4)
 ```
 
-__Memory__ :
+__Memory__ :\
 To write data to the internal memory.
 
-Data: Any
+Data: String
 
 ```lua
-output(data, 6)
+write_var(data, "memory")
 ```
 
-__Keyboard__ :
-To set the color of the keyboard keys or indicator.
+__OS__ :\
+To update the current OS and reboot the computer.
+
+```lua
+output(nil, 5)
+```
+
+__Keyboard Indicator Color__ :\
+To set the color of the keyboard indicator.
 
 Data: Color
 
@@ -190,9 +182,9 @@ Data examples :
 - color (255, 0, 0)
 
 ```lua
-output(data, 7) -- To set the color of the keyboard indicator
+output(data, 6) -- To set the color of the keyboard indicator
 ```
 
-```lua
-output(data, 8) -- To set the color of the keyboard keys
-```
+## __Plasma OS Software API__
+
+To create a software for the Plasma OS.
