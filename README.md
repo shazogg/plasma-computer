@@ -62,6 +62,8 @@ __how to use :__
 
 ## __Computer API__
 
+### _Note: don't send image in the Main Transceiver channel 2, this will reduces FPS_
+
 ### __Inputs :__
 
 __Keyboard__ :
@@ -81,7 +83,7 @@ end
 __Network__ :
 Use "V2" to get data from network.
 
-"V2" type: Any
+"V2" type: String
 
 ```lua
 function networkEvent()
@@ -175,6 +177,18 @@ To update the current OS and reboot the computer.
 output(nil, 5)
 ```
 
+__Display override__ :
+
+To enable the display override.
+
+Data: Boolean
+
+```lua
+write_var(data, "override")
+```
+
+___To display an image on the screen send a signal on the Main Transceiver channel 3 with the image or another data.___
+
 __Keyboard Indicator Color__ :\
 To set the color of the keyboard indicator.
 
@@ -187,6 +201,16 @@ Data examples :
 
 ```lua
 output(data, 6) -- To set the color of the keyboard indicator
+```
+
+__Display Override__ :\
+To override the display.\
+Make sure you dont output on the Display output 1.
+
+Data: any
+
+```lua
+output(data, 7)
 ```
 
 ---

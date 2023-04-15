@@ -1,7 +1,7 @@
 --OS!disk§!
 --#region Global variables
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 BACKGROUND_COLOR = {0, 0, 0}
 TEXT_COLOR = {255, 255, 255}
@@ -384,6 +384,7 @@ end
 -- Override screen
 function overrideScreenSwitch()
   override_screen = not override_screen
+  write_var(override_screen, "override")
 
   if override_screen then
     addLine(colorizeText("Override screen activated", rgbToHex({0, 255, 0})))
