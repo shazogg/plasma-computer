@@ -5,7 +5,6 @@ TEXT_HEIGHT = 45
 TEXT_X_OFFSET = 8
 TEXT_Y_OFFSET = 10
 FONT_SIZE = 30
-MAX_LINES = 11
 DATA_SEPARATOR = "!display§!"
 LINE_SEPARATOR = "!§!"
 
@@ -90,12 +89,8 @@ if input_text ~= nil then
 
   if #splited_text > 0 then
     for i, value in pairs(splited_text) do
-      if current_line_number < MAX_LINES then
-        final_json = final_json .. encodeJson(generateUiText(value, current_line_number, (SCREEN_HEIGHT - TEXT_Y_OFFSET) - (current_line_number + 1) * TEXT_HEIGHT)) .. ","
-        current_line_number = current_line_number + 1
-      else
-        error("Number of lines too big", 1)
-      end
+      final_json = final_json .. encodeJson(generateUiText(value, current_line_number, (SCREEN_HEIGHT - TEXT_Y_OFFSET) - (current_line_number + 1) * TEXT_HEIGHT)) .. ","
+      current_line_number = current_line_number + 1
     end
   else
     error("data badly formated", 1)

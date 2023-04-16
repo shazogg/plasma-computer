@@ -2,7 +2,7 @@
 --#region Global variables
 
 -- Version
-VERSION = "1.2.0"
+VERSION = "2.0.0"
 
 -- Colors
 BACKGROUND_COLOR = {0, 0, 0}
@@ -30,7 +30,6 @@ SOFTWARES_HELP_PAGES = {}
 
 -- Separators
 SEPARATOR = "!§!"
-EVENT_SEPARATOR = "!event§!"
 SOFTWARES_SEPARATOR = "!soft§!"
 SOFTWARES_DATA_SEPARATOR = "!soft_data§!"
 
@@ -40,15 +39,22 @@ HELP_PAGES = {
     "- help [page_number]: for help",
   },
   {
+    "- restart : restart the computer",
     "- clear : clear the screen",
-    "- version : display the version of Plasma OS"
+    "- version : display the version of Plasma OS",
+    "- send [data]: Send message on network",
+    "- override: Override screen display",
   },
   {
-    "- software {list;install;uninstall;update} :",
-    " To install software"
+    "- software list: List softwares",
+    "- software install:",
+    " To install a software from a disk",
+    "- software update:",
+    " To update a software from a disk",
+    "- software uninstall:",
+    " To uninstall a software"
   }
 }
-
 
 --#endregion
 
@@ -164,23 +170,30 @@ function keyboardEvent()
   if type(V1) == "string" then
     local splited_data = split(V1, SEPARATOR)
 
-    -- Character pressed
-    if #splited_data == 2 then
-      if splited_data[1] == "CHAR" and isASCII(splited_data[2]) then
-        addEditorCharacter(splited_data[2])
-      end
-    -- Key pressed
-    elseif #splited_data == 1 then
-      if splited_data[1] == "BACKSPACE" then
-        removeEditorCharacter()
-      elseif splited_data[1] == "DELETE" then
-        deleteEditorText()
-      elseif splited_data[1] == "ALEFT" then
-        moveCursorLeft()
-      elseif splited_data[1] == "ARIGHT" then
-        moveCursorRight()
-      elseif splited_data[1] == "ENTER" then
-        submitCommand()
+    -- If the command is not disabled
+    if not disable_commands then
+      -- Character pressed
+      if #splited_data == 2 then
+        if splited_data[1] == "CHAR" and isASCII(splited_data[2]) then
+          addEditorCharacter(splited_data[2])
+        end
+      -- Key pressed
+      elseif #splited_data == 1 then
+        if splited_data[1] == "BACKSPACE" then
+          removeEditorCharacter()
+        elseif splited_data[1] == "DELETE" then
+          deleteEditorText()
+        elseif splited_data[1] == "ALEFT" then
+          moveCursorLeft()
+        elseif splited_data[1] == "ARIGHT" then
+          moveCursorRight()
+        elseif splited_data[1] == "ENTER" then
+          submitCommand()
+        elseif splited_data[1] == "AUP" then
+          goHistoryUp()
+        elseif splited_data[1] == "ADOWN" then
+          goHistoryDown()
+        end
       end
     end
 
@@ -262,6 +275,33 @@ function moveCursorRight()
   end
 end
 
+-- Go history down
+function goHistoryDown()
+  if commands_history_index <= #commands_history then
+    commands_history_index = commands_history_index + 1
+
+    if commands_history_index == #commands_history + 1 then
+      current_editor_text = ""
+      current_cursor_position = 1
+    else
+      current_editor_text = commands_history[commands_history_index]
+      current_cursor_position = string.len(current_editor_text) + 1
+    end
+
+    blink = true
+  end
+end
+
+-- Go history up
+function goHistoryUp()
+  if commands_history_index > 1 then
+    commands_history_index = commands_history_index - 1
+    current_editor_text = commands_history[commands_history_index]
+    current_cursor_position = string.len(current_editor_text) + 1
+    blink = true
+  end
+end
+
 -- Blink cursor Loop
 function blinkLoop()
   if blink_timer >= 15 then
@@ -289,15 +329,28 @@ end
 function displayLines()
   local lines_text = ""
 
-  if #lines > MAX_LINE_NUMBER - 1 then
-    ShiftBackwardsArray(lines)
-  end
+  -- If editor is disabled
+  if disable_editor then
+    if #lines > MAX_LINE_NUMBER then
+      ShiftBackwardsArray(lines)
+    end
 
-  for i = 1, #lines do
-    lines_text = lines_text .. SEPARATOR .. lines[i]
-  end
+    for i = 1, #lines do
+      lines_text = lines_text .. SEPARATOR .. lines[i]
+    end
 
-  return lines_text .. SEPARATOR .. textEditor()
+    return lines_text
+  else
+    if #lines > MAX_LINE_NUMBER - 1 then
+      ShiftBackwardsArray(lines)
+    end
+
+    for i = 1, #lines do
+      lines_text = lines_text .. SEPARATOR .. lines[i]
+    end
+
+    return lines_text .. SEPARATOR .. textEditor()
+  end
 end
 
 -- Add line
@@ -311,6 +364,8 @@ end
 
 -- Submit command
 function submitCommand()
+  table.insert(commands_history, current_editor_text)
+  commands_history_index = #commands_history + 1
   executeCommand(current_editor_text)
   deleteEditorText()
 end
@@ -321,20 +376,20 @@ function executeCommand(command_text)
   local args = split(command_text, " ")
 
   if #args > 0 then
-    if args[1] == "clear" then
-      clearCommand()
-    elseif args[1] == "help" then
+    if args[1] == "help" then
       helpCommand(ShiftBackwardsArray(args))
+    elseif args[1] == "restart" then
+      output(nil, 5)
+    elseif args[1] == "clear" then
+      clearCommand()
     elseif args[1] == "version"  then
       versionCommand()
     elseif args[1] == "send"  then
       sendCommand(args)
-    elseif args[1] == "software"  then
-      softwareCommand(args)
-    elseif args[1] == "update" then
-      output(nil, 5)
     elseif args[1] == "override" then
       overrideScreenSwitch()
+    elseif args[1] == "software"  then
+      softwareCommand(args)
     elseif SOFTWARES_COMMANDS[args[1]] ~= nil then
       SOFTWARES_COMMANDS[args[1]]()
     else
@@ -620,7 +675,7 @@ function uninstallSoftware(software_name)
     softwares_array[software_index] = nil
 
     -- Remove nil values
-    softwares_array = removeArrayNils(softwares_array)
+    removeArrayNils(softwares_array)
 
     -- Add all softwares to the final os
     for index, part in pairs(softwares_array) do
@@ -673,10 +728,16 @@ function setup()
   addLine(colorizeText("Plasma OS v" .. VERSION, rgbToHex(INFO_COLOR)))
 
   -- Text editor variables
+  disable_editor = false
   command_symbol =  colorizeText("$", rgbToHex(COMMAND_SYMBOL_COLOR)) .. " "
   current_editor_text = ""
   current_cursor_position = 1
   current_text_offset = 1
+
+  -- Commands variables
+  commands_history = {}
+  commands_history_index = 0
+  disable_commands = false
 
   -- Softwares variables
   software_install_mode = false
