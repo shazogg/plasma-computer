@@ -39,7 +39,7 @@ HELP_PAGES = {
     "- version : display the version of Plasma OS"
   },
   {
-    "- software {list;install;remove;update} :",
+    "- software {list;install;uninstall;update} :",
     " To install software"
   }
 }
@@ -202,6 +202,19 @@ function readDiskEvent()
     -- Software install mode
     if software_install_mode then
       installSoftware(V3)
+      software_install_mode = false
+    end
+
+    -- Software update mode
+    if software_update_mode then
+      updateSoftware(V3)
+      software_update_mode = false
+    end
+
+    -- Software remove mode
+    if software_uninstall_mode then
+      uninstallSoftware(V3)
+      software_uninstall_mode = false
     end
 
     -- Softwares events
@@ -423,6 +436,14 @@ function softwareCommand(args)
     elseif args[2] == "install" then
       software_install_mode = true
       output(nil, 3)
+    elseif args[2] == "update" then
+      software_update_mode = true
+      output(nil, 3)
+    elseif args[2] == "uninstall" then
+      software_uninstall_mode = true
+      output(nil, 3)
+    else
+      addLine(colorizeText("Command not found", rgbToHex(ERROR_COLOR)))
     end
   end
 end
@@ -490,13 +511,13 @@ function installSoftware(data)
     local os_parts =  split(current_os, SOFTWARES_SEPARATOR)
     local os_array, os_part1 = ShiftBackwardsArray(os_parts)
     local softwares_array, os_part2 = ShiftBackwardsArray(os_array)
-    local final_os = {os_part1, os_part2}
+    local final_os = {os_part1 .. SOFTWARES_SEPARATOR .. os_part2}
 
     -- Check if there is no software on the computer
     if #softwares_array == 0 then
       table.insert(final_os, data)
 
-      write_var(table.concat(final_os, SOFTWARES_SEPARATOR), "os")
+      write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
       output(nil, 5)
     else
       -- Check if the software is already installed
@@ -505,18 +526,115 @@ function installSoftware(data)
       for index, part in pairs(softwares_array) do
         local current_software_name, current_software_data = cleanedToSoftwareData(part)
 
-        if current_software_name ~= nil and current_software_data ~= nil and current_software_name == software_name then
+        if current_software_name ~= nil and current_software_data ~= nil  then
+          if  current_software_name == software_name then
             software_already_installed = true
+          else
+            table.insert(final_os, part)
+          end
         end
       end
 
       if not software_already_installed then
         table.insert(final_os, data)
 
-        write_var(table.concat(final_os, SOFTWARES_SEPARATOR), "os")
+        write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
         output(nil, 5)
       else
         addLine(colorizeText("The software is already installed", rgbToHex(INFO_COLOR)))
+      end
+    end
+  else
+    addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
+  end
+end
+
+-- Update software
+function updateSoftware(data)
+  local software_name,software_data = stringToSoftwareData(data)
+
+  if software_name ~= nil and software_data ~= nil then
+    local current_os = read_var("os")
+    local os_parts =  split(current_os, SOFTWARES_SEPARATOR)
+    local os_array, os_part1 = ShiftBackwardsArray(os_parts)
+    local softwares_array, os_part2 = ShiftBackwardsArray(os_array)
+    local final_os = {os_part1 .. SOFTWARES_SEPARATOR .. os_part2}
+
+    -- Check if there is no software on the computer
+    if #softwares_array == 0 then
+      addLine(colorizeText("The software is not installed", rgbToHex(INFO_COLOR)))
+    else
+      -- Check if the software is already installed
+      local software_index = -1
+
+      for index, part in pairs(softwares_array) do
+        local current_software_name, current_software_data = cleanedToSoftwareData(part)
+
+        if current_software_name ~= nil and current_software_data ~= nil and current_software_name == software_name then
+          software_index = index
+        end
+      end
+
+      if software_index ~= -1 then
+        softwares_array[software_index] = data
+
+        -- Add all softwares to the final os
+        for index, part in pairs(softwares_array) do
+          table.insert(final_os, part)
+        end
+
+        write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
+        output(nil, 5)
+      else
+        addLine(colorizeText("The software is not installed", rgbToHex(INFO_COLOR)))
+      end
+    end
+  else
+    addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
+  end
+end
+
+-- Uninstall software
+function uninstallSoftware(data)
+  local software_name,software_data = stringToSoftwareData(data)
+
+  if software_name ~= nil and software_data ~= nil then
+    local current_os = read_var("os")
+    local os_parts =  split(current_os, SOFTWARES_SEPARATOR)
+    local os_array, os_part1 = ShiftBackwardsArray(os_parts)
+    local softwares_array, os_part2 = ShiftBackwardsArray(os_array)
+    local final_os = {os_part1 .. SOFTWARES_SEPARATOR .. os_part2}
+
+    -- Check if there is no software on the computer
+    if #softwares_array == 0 then
+      addLine(colorizeText("The software is not installed", rgbToHex(INFO_COLOR)))
+    else
+      -- Check if the software is already installed
+      local software_index = -1
+
+      for index, part in pairs(softwares_array) do
+        local current_software_name, current_software_data = cleanedToSoftwareData(part)
+
+        if current_software_name ~= nil and current_software_data ~= nil and current_software_name == software_name then
+          software_index = index
+        end
+      end
+
+      if software_index ~= -1 then
+        softwares_array[software_index] = nil
+
+        -- Remove nil values
+        softwares_array = removeArrayNils(softwares_array)
+
+        -- Add all softwares to the final os
+        for index, part in pairs(softwares_array) do
+          table.insert(final_os, part)
+        end
+
+        write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
+        output(nil, 5)
+      else
+        addLine(colorizeText("The software is not installed", rgbToHex(INFO_COLOR)))
       end
     end
   else
@@ -569,6 +687,8 @@ function setup()
 
   -- Softwares variables
   software_install_mode = false
+  software_update_mode = false
+  software_uninstall_mode = false
 
   -- Load softwares
   loadSoftwares()

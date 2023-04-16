@@ -89,3 +89,44 @@ SOFTWARES_HELP_PAGES["test"] = {
     "- test2: to test this too"
   }
 }
+
+
+
+
+
+
+
+
+--FILE!disk§!
+--!soft§!
+--why!soft_data§!
+function why_main(data)
+  table.insert(lines, "what the OKKK !")
+end
+
+SOFTWARES["why"] = {
+  ["version"] = "1.5",
+  ["author"] = "shazogg",
+  ["description"] = "test description",
+  ["events"] = {
+    {
+      ["event"] = "NETWORK_INPUT",
+      ["function"] = why_main
+    }
+  },
+  ["commands"] = {
+    {
+      ["command"] = "why",
+      ["function"] = why_main
+    },
+  }
+}
+
+SOFTWARES_HELP_PAGES["why"] = {
+  {
+    "- test: to test this"
+  },
+  {
+    "- test2: to test this too"
+  }
+}
