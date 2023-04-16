@@ -216,12 +216,6 @@ function readDiskEvent()
       software_update_mode = false
     end
 
-    -- Software remove mode
-    if software_uninstall_mode then
-      uninstallSoftware(V3)
-      software_uninstall_mode = false
-    end
-
     -- Softwares events
     if not software_install_mode and not software_update_mode and not software_uninstall_mode then
       for software_name, software_function in pairs(READ_DISK_INPUT_EVENTS) do
@@ -446,8 +440,11 @@ function softwareCommand(args)
       software_update_mode = true
       output(nil, 3)
     elseif args[2] == "uninstall" then
-      software_uninstall_mode = true
-      output(nil, 3)
+      if #args >= 3 then
+        uninstallSoftware(args[3])
+      else
+        addLine(colorizeText("Missing argument", rgbToHex(ERROR_COLOR)))
+      end
     else
       addLine(colorizeText("Command not found", rgbToHex(ERROR_COLOR)))
     end
@@ -601,50 +598,39 @@ function updateSoftware(data)
 end
 
 -- Uninstall software
-function uninstallSoftware(data)
-  local software_name,software_data = stringToSoftwareData(data)
+function uninstallSoftware(software_name)
+  local current_os = read_var("os")
+  local os_parts =  split(current_os, SOFTWARES_SEPARATOR)
+  local os_array, os_part1 = ShiftBackwardsArray(os_parts)
+  local softwares_array, os_part2 = ShiftBackwardsArray(os_array)
+  local final_os = {os_part1 .. SOFTWARES_SEPARATOR .. os_part2}
 
-  if software_name ~= nil and software_data ~= nil then
-    local current_os = read_var("os")
-    local os_parts =  split(current_os, SOFTWARES_SEPARATOR)
-    local os_array, os_part1 = ShiftBackwardsArray(os_parts)
-    local softwares_array, os_part2 = ShiftBackwardsArray(os_array)
-    local final_os = {os_part1 .. SOFTWARES_SEPARATOR .. os_part2}
+  -- Check if the software is already installed
+  local software_index = -1
 
-    -- Check if there is no software on the computer
-    if #softwares_array == 0 then
-      addLine(colorizeText("The software is not installed", rgbToHex(INFO_COLOR)))
-    else
-      -- Check if the software is already installed
-      local software_index = -1
+  for index, part in pairs(softwares_array) do
+    local current_software_name, current_software_data = cleanedToSoftwareData(part)
 
-      for index, part in pairs(softwares_array) do
-        local current_software_name, current_software_data = cleanedToSoftwareData(part)
-
-        if current_software_name ~= nil and current_software_data ~= nil and current_software_name == software_name then
-          software_index = index
-        end
-      end
-
-      if software_index ~= -1 then
-        softwares_array[software_index] = nil
-
-        -- Remove nil values
-        softwares_array = removeArrayNils(softwares_array)
-
-        -- Add all softwares to the final os
-        for index, part in pairs(softwares_array) do
-          table.insert(final_os, part)
-        end
-
-        write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
-        output(nil, 5)
-      else
-        addLine(colorizeText("The software is not installed", rgbToHex(INFO_COLOR)))
-      end
+    if current_software_name ~= nil and current_software_data ~= nil and current_software_name == software_name then
+      software_index = index
     end
+  end
+
+  if software_index ~= -1 then
+    softwares_array[software_index] = nil
+
+    -- Remove nil values
+    softwares_array = removeArrayNils(softwares_array)
+
+    -- Add all softwares to the final os
+    for index, part in pairs(softwares_array) do
+      table.insert(final_os, part)
+    end
+
+    write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
+    output(nil, 5)
   else
-    addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
+    addLine(colorizeText("The software is not installed", rgbToHex(INFO_COLOR)))
   end
 end
 
@@ -662,8 +648,9 @@ function cleanedToSoftwareData(data)
   local software_data = split(data, SOFTWARES_DATA_SEPARATOR, 1)
 
   if #software_data == 2 then
-      local software_name = software_data[1]:gsub("-", "")
-      return software_name, software_data[2]
+    local software_name = software_data[1]:gsub("-", "")
+    software_name = software_name:gsub("%s+", "")
+    return software_name, software_data[2]
   end
 end
 
@@ -694,7 +681,6 @@ function setup()
   -- Softwares variables
   software_install_mode = false
   software_update_mode = false
-  software_uninstall_mode = false
 
   -- Load softwares
   loadSoftwares()
