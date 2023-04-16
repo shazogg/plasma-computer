@@ -5,9 +5,11 @@ VERSION = "1.2.0"
 
 BACKGROUND_COLOR = {0, 0, 0}
 TEXT_COLOR = {255, 255, 255}
+INFO_COLOR = {0, 71, 171}
+SUCCESS_COLOR = {0, 255, 0}
+ERROR_COLOR = {255, 0, 0}
 COMMAND_SYMBOL_COLOR = {80, 200, 120}
 START_INFOS_COLOR = {0, 71, 171}
-ERROR_COLOR = {255, 0, 0}
 
 MAX_LINE_DISPLAY_LENGTH = 30
 MAX_LINE_NUMBER = 11
@@ -66,6 +68,17 @@ function split(str, separator, occurrences)
   return segments
 end
 
+-- Remove nil values from an array
+function removeArrayNils(array)
+  for i = #array, 1, -1 do
+    if array[i] == nil then
+      table.remove(array, i)
+    end
+  end
+
+  return array
+end
+
 -- Convert a table of RGB values to a hex color
 function rgbToHex(rgb)
   local hex = ""
@@ -111,6 +124,11 @@ end
 -- Shift an array backwards
 function ShiftBackwardsArray(array)
   local size = #array
+
+  if size < 2 then
+    return {}, array[1]
+  end
+
   local value = array[1]
   for i = 1, size - 1 do
     array[i] = array[i + 1]
@@ -465,22 +483,41 @@ end
 
 -- Install software
 function installSoftware(data)
-  cleaned_data = split(data, SOFTWARES_SEPARATOR, 1)
-  
-  if #cleaned_data == 2 then
-    software_data = split(cleaned_data[2], SOFTWARES_DATA_SEPARATOR, 1)
+  local software_name,software_data = stringToSoftwareData(data)
 
-    if #software_data == 2 then
-      software_name = software_data[1]:gsub("-", "")
+  if software_name ~= nil and software_data ~= nil then
+    local current_os = read_var("os")
+    local os_parts =  split(current_os, SOFTWARES_SEPARATOR)
+    local os_array, os_part1 = ShiftBackwardsArray(os_parts)
+    local softwares_array, os_part2 = ShiftBackwardsArray(os_array)
+    local final_os = {os_part1, os_part2}
 
-      current_os = read_var("os")
-      os_parts = split(current_os, SOFTWARES_SEPARATOR)
+    -- Check if there is no software on the computer
+    if #softwares_array == 0 then
+      table.insert(final_os, data)
 
-
-
-      print(software_name)
+      write_var(table.concat(final_os, SOFTWARES_SEPARATOR), "os")
+      output(nil, 5)
     else
-      addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
+      -- Check if the software is already installed
+      local software_already_installed = false
+
+      for index, part in pairs(softwares_array) do
+        local current_software_name, current_software_data = cleanedToSoftwareData(part)
+
+        if current_software_name ~= nil and current_software_data ~= nil and current_software_name == software_name then
+            software_already_installed = true
+        end
+      end
+
+      if not software_already_installed then
+        table.insert(final_os, data)
+
+        write_var(table.concat(final_os, SOFTWARES_SEPARATOR), "os")
+        output(nil, 5)
+      else
+        addLine(colorizeText("The software is already installed", rgbToHex(INFO_COLOR)))
+      end
     end
   else
     addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
@@ -492,22 +529,17 @@ function stringToSoftwareData(data)
   cleaned_data = split(data, SOFTWARES_SEPARATOR, 1)
   
   if #cleaned_data == 2 then
-    software_data = split(cleaned_data[2], SOFTWARES_DATA_SEPARATOR, 1)
+    return cleanedToSoftwareData(cleaned_data[2])
+  end
+end
 
-    if #software_data == 2 then
-      software_name = software_data[1]:gsub("-", "")
+-- Cleaned to software data
+function cleanedToSoftwareData(data)
+  software_data = split(data, SOFTWARES_DATA_SEPARATOR, 1)
 
-      current_os = read_var("os")
-      os_parts = split(current_os, SOFTWARES_SEPARATOR)
-
-
-
-      print(software_name)
-    else
-      addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
-    end
-  else
-    addLine(colorizeText("The software is invalid", rgbToHex(ERROR_COLOR)))
+  if #software_data == 2 then
+    software_name = software_data[1]:gsub("-", "")
+      return software_name, software_data[2]
   end
 end
 
