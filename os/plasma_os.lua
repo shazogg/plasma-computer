@@ -1,19 +1,24 @@
 --OS!disk§!
 --#region Global variables
 
+-- Version
 VERSION = "1.2.0"
 
+-- Colors
 BACKGROUND_COLOR = {0, 0, 0}
 TEXT_COLOR = {255, 255, 255}
 INFO_COLOR = {0, 71, 171}
 SUCCESS_COLOR = {0, 255, 0}
 ERROR_COLOR = {255, 0, 0}
 COMMAND_SYMBOL_COLOR = {80, 200, 120}
-START_INFOS_COLOR = {0, 71, 171}
+BLINK_COLOR = {255, 255, 255}
 
+
+-- Display
 MAX_LINE_DISPLAY_LENGTH = 30
 MAX_LINE_NUMBER = 11
 
+-- Softwares events
 SOFTWARES = {}
 KEYBOARD_INPUT_EVENTS = {}
 NETWORK_INPUT_EVENTS = {}
@@ -23,7 +28,7 @@ LOOP_EVENTS = {}
 SOFTWARES_COMMANDS = {}
 SOFTWARES_HELP_PAGES = {}
 
-
+-- Separators
 SEPARATOR = "!§!"
 EVENT_SEPARATOR = "!event§!"
 SOFTWARES_SEPARATOR = "!soft§!"
@@ -157,7 +162,7 @@ end
 -- Keyboard event
 function keyboardEvent()
   if type(V1) == "string" then
-    splited_data = split(V1, SEPARATOR)
+    local splited_data = split(V1, SEPARATOR)
 
     -- Character pressed
     if #splited_data == 2 then
@@ -191,7 +196,7 @@ function networkEvent()
   if type(V2) == "string" then
     -- Softwares events
     for software_name, software_function in pairs(NETWORK_INPUT_EVENTS) do
-      software_function(splited_data)
+      software_function(V2)
     end
   end
 end
@@ -218,8 +223,10 @@ function readDiskEvent()
     end
 
     -- Softwares events
-    for software_name, software_function in pairs(READ_DISK_INPUT_EVENTS) do
-      software_function(splited_data)
+    if not software_install_mode and not software_update_mode and not software_uninstall_mode then
+      for software_name, software_function in pairs(READ_DISK_INPUT_EVENTS) do
+        software_function(V3)
+      end
     end
   end
 end
@@ -272,13 +279,13 @@ function blinkLoop()
 end
 
 function textEditor()
-  displayed_text =  command_symbol .. current_editor_text
+  local displayed_text =  command_symbol .. current_editor_text
 
   if current_cursor_position > MAX_LINE_DISPLAY_LENGTH then
     displayed_text = separateStringEnd(displayed_text, (string.len(command_symbol) + current_cursor_position) - MAX_LINE_DISPLAY_LENGTH)
-    displayed_text = separateString(displayed_text, MAX_LINE_DISPLAY_LENGTH + 1 + string.len(command_symbol), colorizeText("|", rgbToHex(blink and TEXT_COLOR or BACKGROUND_COLOR)))
+    displayed_text = separateString(displayed_text, MAX_LINE_DISPLAY_LENGTH + 1 + string.len(command_symbol), colorizeText("|", rgbToHex(blink and BLINK_COLOR or BACKGROUND_COLOR)))
   else
-    displayed_text = separateString(displayed_text, current_cursor_position + string.len(command_symbol), colorizeText("|", rgbToHex(blink and TEXT_COLOR or BACKGROUND_COLOR)))
+    displayed_text = separateString(displayed_text, current_cursor_position + string.len(command_symbol), colorizeText("|", rgbToHex(blink and BLINK_COLOR or BACKGROUND_COLOR)))
   end
 
   return displayed_text
@@ -339,7 +346,6 @@ function executeCommand(command_text)
     else
       addLine(colorizeText("Command not found", rgbToHex(ERROR_COLOR)))
     end
-    -- Add your commands here
   end
 end
 
@@ -469,7 +475,7 @@ function loadSoftwares()
   for software_name, data in pairs(SOFTWARES) do
     -- Add software events
     if data["events"] ~= nil then
-      events = data["events"]
+      local events = data["events"]
 
       for index, event in pairs(events) do
         addSoftwareEvent(software_name, event)
@@ -478,7 +484,7 @@ function loadSoftwares()
 
     -- Add software commands
     if data["commands"] ~= nil then
-      commands = data["commands"]
+      local commands = data["commands"]
 
       for index, command in pairs(commands) do
         SOFTWARES_COMMANDS[command["command"]] = command["function"]
@@ -644,7 +650,7 @@ end
 
 -- String to software data
 function stringToSoftwareData(data)
-  cleaned_data = split(data, SOFTWARES_SEPARATOR, 1)
+  local cleaned_data = split(data, SOFTWARES_SEPARATOR, 1)
   
   if #cleaned_data == 2 then
     return cleanedToSoftwareData(cleaned_data[2])
@@ -653,10 +659,10 @@ end
 
 -- Cleaned to software data
 function cleanedToSoftwareData(data)
-  software_data = split(data, SOFTWARES_DATA_SEPARATOR, 1)
+  local software_data = split(data, SOFTWARES_DATA_SEPARATOR, 1)
 
   if #software_data == 2 then
-    software_name = software_data[1]:gsub("-", "")
+      local software_name = software_data[1]:gsub("-", "")
       return software_name, software_data[2]
   end
 end
@@ -677,7 +683,7 @@ function setup()
   blink_timer = 0
 
   -- Start infos display
-  addLine(colorizeText("Plasma OS v" .. VERSION, rgbToHex(START_INFOS_COLOR)))
+  addLine(colorizeText("Plasma OS v" .. VERSION, rgbToHex(INFO_COLOR)))
 
   -- Text editor variables
   command_symbol =  colorizeText("$", rgbToHex(COMMAND_SYMBOL_COLOR)) .. " "
