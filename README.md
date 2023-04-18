@@ -14,7 +14,9 @@ _Note: If you detect any bugs, please report them._
 
 ### Computer
 
-STEAM ID: __2962708844__\
+Desktop: STEAM ID: __2962708844__\
+Laptop: STEAM ID: __2963356432__\
+Holo: STEAM ID: __2963363681__\
 The computer is the main device, it is used to run programs and interact with the world, there is two version: laptop and desktop.
 
 __how to use :__
