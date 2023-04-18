@@ -2,8 +2,8 @@
 SEPARATOR = "!disk§!"
 
 -- Split a string into a table of substrings
-function split(str, sep)
-  local tmp = str:gsub(sep, "\0")
+function split(str, separator, occurrences)
+  local tmp = str:gsub(separator, "\0", occurrences)
   local segments = {}
   for segment in tmp:gmatch("[^%z]+") do
       table.insert(segments, segment)
@@ -38,7 +38,7 @@ end
 -- Data readed event
 function readedEvent()
   if V1 ~= nil then
-    splited_data = split(V1, SEPARATOR)
+    splited_data = split(V1, SEPARATOR, 1)
 
     if #splited_data == 2 then
       -- Check data type

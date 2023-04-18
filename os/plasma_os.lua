@@ -2,7 +2,7 @@
 --#region Global variables
 
 -- Version
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 
 -- Colors
 BACKGROUND_COLOR = {0, 0, 0}
@@ -32,6 +32,7 @@ SOFTWARES_HELP_PAGES = {}
 SEPARATOR = "!§!"
 SOFTWARES_SEPARATOR = "!soft§!"
 SOFTWARES_DATA_SEPARATOR = "!soft_data§!"
+OS_DISK_SEPARATOR = "--OS!disk§!"
 
 -- Help pages
 HELP_PAGES = {
@@ -44,6 +45,7 @@ HELP_PAGES = {
     "- version : display the version of Plasma OS",
     "- send [data]: Send message on network",
     "- override: Override screen display",
+    "- save: To save current OS on a disk"
   },
   {
     "- software list: List softwares",
@@ -390,6 +392,8 @@ function executeCommand(command_text)
       overrideScreenSwitch()
     elseif args[1] == "software"  then
       softwareCommand(args)
+    elseif args[1] == "save"  then
+      saveOSCommand()
     elseif SOFTWARES_COMMANDS[args[1]] ~= nil then
       SOFTWARES_COMMANDS[args[1]]()
     else
@@ -480,6 +484,18 @@ function sendCommand(args)
   output(args_text, 2)
 end
 
+-- Override screen
+function overrideScreenSwitch()
+  override_screen = not override_screen
+  write_var(override_screen, "override")
+
+  if override_screen then
+    addLine(colorizeText("Override screen activated", rgbToHex({0, 255, 0})))
+  else
+    addLine(colorizeText("Override screen deactivated", rgbToHex({0, 255, 0})))
+  end
+end
+
 -- Software command
 function softwareCommand(args)
   if #args > 1 then
@@ -506,16 +522,9 @@ function softwareCommand(args)
   end
 end
 
--- Override screen
-function overrideScreenSwitch()
-  override_screen = not override_screen
-  write_var(override_screen, "override")
-
-  if override_screen then
-    addLine(colorizeText("Override screen activated", rgbToHex({0, 255, 0})))
-  else
-    addLine(colorizeText("Override screen deactivated", rgbToHex({0, 255, 0})))
-  end
+-- Save OS command
+function saveOSCommand()
+  output(OS_DISK_SEPARATOR .. read_var("os"), 4)
 end
 
 --#endregion
