@@ -2,7 +2,7 @@
 --#region Global variables
 
 -- Version
-VERSION = "2.1.0"
+VERSION = "2.1.3"
 
 -- Colors
 BACKGROUND_COLOR = {0, 0, 0}
@@ -478,7 +478,11 @@ function sendCommand(args)
   -- Concatenate args
   local args_text = ""
   for i = 2, #args do
-    args_text = args_text .. args[i] .. " "
+    if i >= #args then
+      args_text = args_text .. args[i]
+    else
+      args_text = args_text .. args[i] .. " "
+    end
   end
 
   output(args_text, 2)
@@ -546,6 +550,7 @@ function loadSoftwares()
     -- Add software commands
     if data["commands"] ~= nil then
       local commands = data["commands"]
+
 
       for index, command in pairs(commands) do
         SOFTWARES_COMMANDS[command["command"]] = command["function"]
@@ -724,7 +729,8 @@ end
 function setup()
   -- Utility variable
   start_check = true
-  override_screen = false
+  override_screen = read_var("override")
+  refresh_tick = 0
 
   -- Lines variables
   lines = {}
@@ -766,15 +772,23 @@ end
 function loop()
   -- Check if the start_check variable is not nil or false
   if start_check then
-    blinkLoop()
-
     -- Softwares events
     for software_name, software_function in pairs(LOOP_EVENTS) do
       software_function(splited_data)
     end
 
     if not override_screen then
-      output(displayLines(), 1)
+      blinkLoop()
+
+      if refresh_tick == 0 then
+        output(displayLines(), 1)
+      end
+
+      refresh_tick = refresh_tick + 1
+
+      if refresh_tick >= 2 then
+        refresh_tick = 0
+      end
     end
   end
 end

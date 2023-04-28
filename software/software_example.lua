@@ -2,6 +2,15 @@
 --!soft§!
 --SOFTWARE_NAME!soft_data§!
 
+-- Example functions
+function example1(data)
+  print(data)
+end
+
+function example2(data)
+  print(data)
+end
+
 SOFTWARES["SOFTWARE_NAME"] = {
   ["version"] = "1.0.0",
   ["author"] = "shazogg",
@@ -38,12 +47,3 @@ SOFTWARES_HELP_PAGES["SOFTWARE_NAME"] = {
     "- example2: to test this too"
   }
 }
-
--- Example functions
-function example1(data)
-  print(data)
-end
-
-function example2(data)
-  print(data)
-end
