@@ -2,7 +2,7 @@
 --#region Global variables
 
 -- Version
-VERSION = "2.1.3"
+VERSION = "2.5.0"
 
 -- Colors
 BACKGROUND_COLOR = {0, 0, 0}
@@ -22,6 +22,7 @@ MAX_LINE_NUMBER = 11
 SOFTWARES = {}
 KEYBOARD_INPUT_EVENTS = {}
 NETWORK_INPUT_EVENTS = {}
+MODULE_INPUT_EVENTS = {}
 READ_DISK_INPUT_EVENTS = {}
 SETUP_EVENTS = {}
 LOOP_EVENTS = {}
@@ -92,6 +93,30 @@ function removeArrayNils(array)
   return array
 end
 
+-- Slice an array
+function slice(array, start_index, end_index)
+  local sliced_array = {}
+  local array_length = #array
+
+  -- Handling negative indices
+  if start_index < 0 then
+      start_index = array_length + start_index + 1
+  end
+
+  if end_index == nil or end_index > array_length then
+      end_index = array_length
+  elseif end_index < 0 then
+      end_index = array_length + end_index + 1
+  end
+
+  -- Slicing the array
+  for i = start_index, end_index do
+      table.insert(sliced_array, array[i])
+  end
+
+  return sliced_array
+end
+
 -- Convert a table of RGB values to a hex color
 function rgbToHex(rgb)
   local hex = ""
@@ -153,10 +178,14 @@ function ShiftBackwardsArray(array)
 end
 
 -- Merge an array into a string
-function mergeArrayToString(array)
+function mergeArrayToString(array, separator)
   local result = ""
-  for _, value in ipairs(array) do
+  local sep = separator or ""
+  for i, value in ipairs(array) do
     if value ~= nil then
+      if i > 1 then
+        result = result .. sep
+      end
       result = result .. value
     end
   end
@@ -212,6 +241,16 @@ function networkEvent()
     -- Softwares events
     for software_name, software_function in pairs(NETWORK_INPUT_EVENTS) do
       software_function(V2)
+    end
+  end
+end
+
+-- Module input event
+function moduleInputEvent()
+  if type(V4) == "string" then
+    -- Softwares events
+    for software_name, software_function in pairs(MODULE_INPUT_EVENTS) do
+      software_function(V4)
     end
   end
 end
@@ -381,7 +420,8 @@ function executeCommand(command_text)
     if args[1] == "help" then
       helpCommand(ShiftBackwardsArray(args))
     elseif args[1] == "restart" then
-      output(nil, 5)
+      -- Update os
+      output(16, 1) -- Update os adress
     elseif args[1] == "clear" then
       clearCommand()
     elseif args[1] == "version"  then
@@ -395,7 +435,11 @@ function executeCommand(command_text)
     elseif args[1] == "save"  then
       saveOSCommand()
     elseif SOFTWARES_COMMANDS[args[1]] ~= nil then
-      SOFTWARES_COMMANDS[args[1]]()
+      local software_command = args[1]
+
+      -- Remove software command
+      ShiftBackwardsArray(args)
+      SOFTWARES_COMMANDS[software_command](args)
     else
       addLine(colorizeText("Command not found", rgbToHex(ERROR_COLOR)))
     end
@@ -485,6 +529,7 @@ function sendCommand(args)
     end
   end
 
+  output(24, 1) -- Network write adress
   output(args_text, 2)
 end
 
@@ -510,10 +555,10 @@ function softwareCommand(args)
       end
     elseif args[2] == "install" then
       software_install_mode = true
-      output(nil, 3)
+      output(13, 1) -- Read disk adress
     elseif args[2] == "update" then
       software_update_mode = true
-      output(nil, 3)
+      output(13, 1) -- Read disk adress
     elseif args[2] == "uninstall" then
       if #args >= 3 then
         uninstallSoftware(args[3])
@@ -528,7 +573,8 @@ end
 
 -- Save OS command
 function saveOSCommand()
-  output(OS_DISK_SEPARATOR .. read_var("os"), 4)
+  output(23, 1) -- Write disk adress
+  output(OS_DISK_SEPARATOR .. read_var("os"), 2)
 end
 
 --#endregion
@@ -565,6 +611,8 @@ function addSoftwareEvent(software_name, event)
     KEYBOARD_INPUT_EVENTS[software_name] = event["function"]
   elseif event["event"] == "NETWORK_INPUT" then
     NETWORK_INPUT_EVENTS[software_name] = event["function"]
+  elseif event["event"] == "MODULE_INPUT" then
+    MODULE_INPUT_EVENTS[software_name] = event["function"]
   elseif event["event"] == "DISK_INPUT" then
     DISK_INPUT_EVENTS[software_name] = event["function"]
   elseif event["event"] == "SETUP" then
@@ -590,7 +638,9 @@ function installSoftware(data)
       table.insert(final_os, data)
 
       write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
-      output(nil, 5)
+
+      -- Update os
+      output(16, 1) -- Update os adress
     else
       -- Check if the software is already installed
       local software_already_installed = false
@@ -611,7 +661,9 @@ function installSoftware(data)
         table.insert(final_os, data)
 
         write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
-        output(nil, 5)
+
+        -- Update os
+        output(16, 1) -- Update os adress
       else
         addLine(colorizeText("The software is already installed", rgbToHex(INFO_COLOR)))
       end
@@ -656,7 +708,9 @@ function updateSoftware(data)
         end
 
         write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
-        output(nil, 5)
+
+        -- Update os
+        output(16, 1) -- Update os adress
       else
         addLine(colorizeText("The software is not installed", rgbToHex(INFO_COLOR)))
       end
@@ -697,7 +751,9 @@ function uninstallSoftware(software_name)
     end
 
     write_var(table.concat(final_os, "--" .. SOFTWARES_SEPARATOR), "os")
-    output(nil, 5)
+
+    -- Update os
+    output(16, 1) -- Update os adress
   else
     addLine(colorizeText("The software is not installed", rgbToHex(INFO_COLOR)))
   end
@@ -781,7 +837,8 @@ function loop()
       blinkLoop()
 
       if refresh_tick == 0 then
-        output(displayLines(), 1)
+        output(12, 1) -- Display lines bus adress
+        output(displayLines(), 2)
       end
 
       refresh_tick = refresh_tick + 1

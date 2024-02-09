@@ -114,6 +114,18 @@ To request the read of the disk use :
 output(nil, 3)
 ```
 
+__Module Input__ :
+Use "V4" to get data from the module of the device.
+
+"V4" type: String
+
+```lua
+function moduleInputEvent()
+    -- Called when data arrives from module of the same device
+    print(V4) -- Error if V4 not a string
+end
+```
+
 __Memory__ :
 
 To read the internal memory use :
@@ -163,6 +175,15 @@ Data: Any
 
 ```lua
 output(data, 4)
+```
+
+__Module output__ :\
+To send data to the module output of the device
+
+Data: Any
+
+```lua
+output(data, 7)
 ```
 
 __Memory__ :\
@@ -274,6 +295,7 @@ __EVENTS LIST :__
 
 - __"KEYBOARD_INPUT"__: On Keyboard input
 - __"NETWORK_INPUT"__: On Network input
+- __"MODULE_INPUT"__: On Module input
 - __"DISK_INPUT"__: On Disk input
 - __"SETUP"__: On Setup
 - __"LOOP"__: On Loop
