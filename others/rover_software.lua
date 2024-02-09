@@ -83,10 +83,10 @@ function roverMotd(data)
   output(data_string, 7)
 end
 
-SOFTWARES["rover"] = {
+PACKAGES["rover"] = {
   ["version"] = "1.2.0",
   ["author"] = "shazogg",
-  ["description"] = "The rover software",
+  ["description"] = "The rover package",
   ["events"] = {
     {
       ["event"] = "MODULE_INPUT",
@@ -117,8 +117,8 @@ SOFTWARES["rover"] = {
   }
 }
 
-SOFTWARES_HELP_PAGES["rover"] = {
+PACKAGES_HELP_PAGES["rover"] = {
   {
-    "example software, page 1"
+    "example package, page 1"
   }
 }
